@@ -9,6 +9,7 @@
   const nf = new Intl.NumberFormat('uk-UA');
   const TAX = window.TENDERA_TAX;
   const AUTH = window.tenderaAuth;
+  const CFG = window.TENDERA_CONFIG || {};
   const MONTHS = ['січ', 'лют', 'бер', 'кві', 'тра', 'чер', 'лип', 'сер', 'вер', 'жов', 'лис', 'гру'];
   const U = id => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=1600&q=80`;
   const PHOTOS = {
@@ -17,6 +18,21 @@
   };
   const STAGES = [{ id: 'new', name: 'Нові' }, { id: 'analysis', name: 'Аналіз' }, { id: 'prep', name: 'Підготовка' }, { id: 'submitted', name: 'Подано' }, { id: 'result', name: 'Результат' }];
   const ROLE_UA = { owner: 'Власник', admin: 'Адміністратор', member: 'Учасник' };
+  /* ---------- тарифи (як на лендингу) ---------- */
+  const PLANS = [
+    { id: 'start', name: 'Start', m: 49, y: 39, for: 'Для малих компаній', f: ['Тендери України або ЄС', 'Профіль пошуку і оцінка збігу', 'Pipeline і чекліст подачі', '2 користувачі'] },
+    { id: 'pro', name: 'Pro', m: 149, y: 119, for: 'Для тих, хто подається щомісяця', pop: true, f: ['Україна і всі країни ЄС', 'Бібліотека документів з контролем строків', 'Нотатки команди й аналітика', '5 користувачів'] },
+    { id: 'business', name: 'Business', m: 399, y: 319, for: 'Для bid-команд і консультантів', f: ['Усе з Pro', '15 користувачів', 'Допомога з налаштуванням профілю', 'Пріоритетна підтримка'] }
+  ];
+  const PLAN_NAME = { trial: 'Пробний період', start: 'Start', pro: 'Pro', business: 'Business', enterprise: 'Enterprise', expired: 'Неактивна' };
+  const LIMITS = {
+    start: { seats: 2, markets: 1, library: false, analytics: false, notes: false, docs: 0 },
+    pro: { seats: 5, markets: 2, library: true, analytics: true, notes: true, docs: 300 },
+    business: { seats: 15, markets: 2, library: true, analytics: true, notes: true, docs: 2000 },
+    enterprise: { seats: 200, markets: 2, library: true, analytics: true, notes: true, docs: 20000 },
+    trial: { seats: 5, markets: 2, library: true, analytics: true, notes: true, docs: 100 },
+    expired: { seats: 0, markets: 0, library: false, analytics: false, notes: false, docs: 0 }
+  };
   const DOC_TYPES = ['Статутні документи', 'Довідка', 'Ліцензія / дозвіл', 'Сертифікат', 'Фінансова звітність', 'Досвід / договори', 'CV працівника', 'Інше'];
 
   /* ---------- formatting ---------- */
@@ -41,7 +57,7 @@
   const local = { get(k, d) { try { const v = localStorage.getItem('tendera.' + k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem('tendera.' + k, JSON.stringify(v)); } catch { /* storage unavailable */ } } };
   const S = { pipeline: {}, outcomes: {}, dismissed: {}, saved: {}, checks: {}, notes: {}, drafts: {}, snaps: {}, theme: local.get('theme', 'dark'), view: local.get('view', 'cards') };
   const SYNC = ['pipeline', 'outcomes', 'dismissed', 'saved', 'checks', 'notes', 'drafts', 'snaps'];
-  let ACC = null; const DATA = { items: [], byId: new Map(), meta: null, error: null, loading: true };
+  let ACC = null; const DATA = { all: [], items: [], byId: new Map(), meta: null, error: null, loading: true };
   document.documentElement.dataset.theme = S.theme;
   let syncTimer = 0;
   function save() {
@@ -49,12 +65,34 @@
     syncTimer = setTimeout(async () => {
       const data = Object.fromEntries(SYNC.map(k => [k, S[k]]));
       const { error } = await ACC.client.from('org_state').upsert({ org_id: ACC.org.id, data, updated_by: ACC.uid });
-      if (error) toast('Не вдалося зберегти зміни. Перевірте з’єднання і повторіть дію.', 'bad');
+      if (error) toast(planErr(error) || 'Не вдалося зберегти зміни. Перевірте з’єднання і повторіть дію.', 'bad');
     }, 600);
   }
   function toast(html, kind) {
     const el = document.createElement('div'); el.className = 'toast' + (kind === 'bad' ? ' toast--bad' : ''); el.innerHTML = html;
     $('#toasts').append(el); setTimeout(() => { el.style.transition = 'opacity .4s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 400); }, 4200);
+  }
+  /* ---------- підписка ---------- */
+  const SUB = () => ACC.sub;
+  const lim = () => SUB().limits;
+  const expired = () => SUB().effective === 'expired';
+  const can = k => !!lim()[k];
+  const market = () => lim().markets === 1 ? (((ACC.org.regions || []).includes('UA') || !(ACC.org.regions || []).length) ? 'prozorro' : 'ted') : null;
+  const daysTo = iso => iso ? Math.ceil((Date.parse(iso) - Date.now()) / 864e5) : null;
+  function localSub(o) { // якщо в базі ще немає функції підписки — рахуємо так само в браузері
+    const eff = o.plan === 'trial' && Date.parse(o.trial_ends_at) < Date.now() ? 'expired' : o.plan !== 'trial' && o.paid_until && Date.parse(o.paid_until) < Date.now() - 3 * 864e5 ? 'expired' : o.plan;
+    return { plan: o.plan, effective: eff, limits: LIMITS[eff] || LIMITS.trial, usage: { members: ACC.team.length, invites: ACC.invites.length, docs: ACC.docs.length }, request: null, local: true };
+  }
+  const PLAN_ERR = { plan_expired: 'Підписка неактивна — оберіть тариф у розділі «Підписка».', seat_limit: 'Усі місця тарифу зайняті. Перейдіть на вищий тариф, щоб додати людей.', plan_no_library: 'Бібліотека документів доступна з тарифу Pro.', doc_limit: 'Досягнуто ліміту документів вашого тарифу.' };
+  const planErr = e => { const m = (e && e.message) || ''; const k = Object.keys(PLAN_ERR).find(x => m.includes(x)); return k ? PLAN_ERR[k] : null; };
+  const upgradeGate = (title, text, need = 'Pro') => `<div class="ph"><div><h1>${title}</h1></div></div>
+    <div class="card gate"><span class="gate__lock" aria-hidden="true">🔒</span><b>Доступно з тарифу ${need}</b><p>${text}</p>
+    <a class="btn btn--primary" href="#/settings?tab=billing">Переглянути тарифи</a></div>`;
+  function paywall() {
+    const o = ACC.org;
+    return `<div class="card gate gate--big"><span class="gate__lock" aria-hidden="true">⏳</span><b>${o.plan === 'trial' ? 'Пробний період завершився' : 'Підписка неактивна'}</b>
+      <p>Ваші тендери, pipeline, нотатки й документи збережені. Оберіть тариф — і робота продовжиться з того самого місця.</p>
+      <a class="btn btn--primary btn--lg" href="#/settings?tab=billing">Обрати тариф</a></div>`;
   }
   document.addEventListener('error', e => { if (e.target.tagName === 'IMG') e.target.classList.add('is-broken'); }, true);
 
@@ -99,7 +137,7 @@
     return PHOTOS.goods;
   }
   const titleOf = t => t.t || 'Без назви';
-  const getT = id => DATA.byId.get(id) || S.snaps[id] || null;
+  const getT = id => DATA.byId.get(id) || DATA.all.find(t => t.id === id) || S.snaps[id] || null;
   const snap = t => ({ id: t.id, src: t.src, cc: t.cc, cn: t.cn, t: t.t, b: t.b, bc: t.bc, v: t.v, cur: t.cur, vat: t.vat, g: t.g, end: t.end, enq: t.enq, url: t.url, cpv: t.cpv, cpvN: t.cpvN, cat: t.cat, pt: t.pt, r: t.r, loc: t.loc, lots: t.lots, pub: t.pub, docs: t.docs || [], d: t.d, archived: true });
   function ensureSnap(t) { if (DATA.byId.has(t.id)) S.snaps[t.id] = snap(t); }
 
@@ -143,14 +181,15 @@
     cleanup.forEach(f => f()); cleanup = [];
     const raw = location.hash.replace(/^#\/?/, ''); const [pathPart, query = ''] = raw.split('?'); const [name = '', ...rest] = pathPart.split('/');
     const arg = rest.length ? decodeURIComponent(rest.join('/')) : undefined; const params = Object.fromEntries(new URLSearchParams(query));
-    const view = $('#view'); const fn = routes[name] || overview;
+    const view = $('#view'); let fn = routes[name] || overview;
+    if (expired() && name !== 'settings') { fn = paywall; }
     view.innerHTML = fn(arg, params) || '';
     view.classList.remove('is-entering'); void view.offsetWidth; view.classList.add('is-entering');
     if (fn.mount) fn.mount(view, arg, params);
     animateRings(view);
     $$('.side__nav a').forEach(a => a.classList.toggle('is-active', a.dataset.route === (name || 'overview')));
     $('#side').classList.remove('is-open'); $('#menuBtn').setAttribute('aria-expanded', 'false');
-    document.title = (fn.title ? fn.title(arg) + ' — ' : '') + 'Tendera';
+    document.title = (fn.title ? fn.title(arg) + ' — ' : '') + 'Tendera'; paintBanner();
     if (!render.first) view.focus({ preventScroll: true }); render.first = false; scrollTo({ top: 0 });
   }
   render.first = true;
@@ -252,7 +291,7 @@
   const F = { q: '', src: 'all', min: 50, cat: '', sort: 'score', maxEur: 0, shown: 60, saved: false };
   function tenders(_, params) {
     if (params.sort) F.sort = params.sort; if (params.saved) F.saved = true; if (P.empty) F.min = 0;
-    return `${dataNote()}${profileNote()}<div class="ph"><div><h1>Тендери</h1><p>${nf.format(DATA.items.length)} відкритих закупівель з Prozorro і TED${DATA.meta && DATA.meta.generatedAt ? ', оновлено ' + ago(DATA.meta.generatedAt) : ''}.</p></div>
+    return `${dataNote()}${profileNote()}${market() ? `<div class="card note"><b>Тариф Start: ${market() === 'prozorro' ? 'тендери України' : 'тендери ЄС'}</b><p>${market() === 'prozorro' ? 'Щоб бачити ще й закупівлі всіх країн ЄС' : 'Щоб бачити ще й Prozorro'} — перейдіть на <a href="#/settings?tab=billing">Pro</a>.</p></div>` : ''}<div class="ph"><div><h1>Тендери</h1><p>${nf.format(DATA.items.length)} відкритих закупівель з Prozorro і TED${DATA.meta && DATA.meta.generatedAt ? ', оновлено ' + ago(DATA.meta.generatedAt) : ''}.</p></div>
       <div class="ph__actions"><div class="seg" role="group" aria-label="Вигляд"><button type="button" data-view="cards" aria-pressed="${S.view === 'cards'}">Картки</button><button type="button" data-view="table" aria-pressed="${S.view === 'table'}">Таблиця</button></div></div></div>
     <div class="filters">
       <input class="select" style="min-width:240px" type="search" id="fq" placeholder="Пошук: назва, замовник, CPV, ID" value="${esc(F.q)}" aria-label="Пошук">
@@ -351,12 +390,12 @@
       docs: () => t.docs && t.docs.length ? `<ul class="req">${t.docs.map(x => `<li><span class="st st--ok">${ICON.doc}</span><div><a href="${esc(x.u)}" target="_blank" rel="noopener" style="text-decoration:none">${esc(x.t)}</a><small>${esc((x.f || 'файл').toUpperCase())} · з ${srcLabel(t)}</small></div><a class="cite" href="${esc(x.u)}" target="_blank" rel="noopener">Відкрити</a></li>`).join('')}</ul>`
         : `<p class="muted">${t.src === 'ted' ? 'Документація TED доступна за посиланням у повідомленні.' : 'До оголошення не прикріплено документів.'}</p><a class="btn btn--ghost" href="${esc(t.url)}" target="_blank" rel="noopener">${ICON.ext}Відкрити оголошення</a>`,
       check: () => checklistHtml(t),
-      notes: () => `<label class="sr-only" for="note">Нотатки</label><textarea id="note" class="editor editor--sans" placeholder="Нотатки для команди: питання до замовника, ціни постачальників, хто що робить…">${esc(S.notes[t.id] || '')}</textarea><p class="muted" style="margin:8px 0 0" id="noteSt">Нотатки бачать усі учасники вашої компанії.</p>`
+      notes: () => !can('notes') ? `<p class="muted" style="margin:0">🔒 Нотатки команди доступні з тарифу Pro. <a href="#/settings?tab=billing">Переглянути тарифи</a></p>` : `<label class="sr-only" for="note">Нотатки</label><textarea id="note" class="editor editor--sans" placeholder="Нотатки для команди: питання до замовника, ціни постачальників, хто що робить…">${esc(S.notes[t.id] || '')}</textarea><p class="muted" style="margin:8px 0 0" id="noteSt">Нотатки бачать усі учасники вашої компанії.</p>`
     };
     function show(k) { $$('[data-tab]', view).forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === k))); body.innerHTML = tabs[k](); bindTab(k); animateRings(body); }
     function bindTab(k) {
       if (k === 'check') bindChecklist(body, t, () => show('check'));
-      if (k === 'notes') { let nt = 0; $('#note', body).addEventListener('input', e => { clearTimeout(nt); $('#noteSt', body).textContent = 'Зберігаємо…'; nt = setTimeout(() => { S.notes[t.id] = e.target.value.slice(0, 20000); ensureSnap(t); save(); $('#noteSt', body).textContent = 'Збережено'; }, 700); }); }
+      if (k === 'notes' && $('#note', body)) { let nt = 0; $('#note', body).addEventListener('input', e => { clearTimeout(nt); $('#noteSt', body).textContent = 'Зберігаємо…'; nt = setTimeout(() => { S.notes[t.id] = e.target.value.slice(0, 20000); ensureSnap(t); save(); $('#noteSt', body).textContent = 'Збережено'; }, 700); }); }
     }
     $$('[data-tab]', view).forEach(b => b.onclick = () => show(b.dataset.tab));
     show(params.tab && tabs[params.tab] ? params.tab : 'info');
@@ -469,6 +508,7 @@
 
   /* ===================== LIBRARY (Supabase Storage) ===================== */
   function library() {
+    if (!can('library')) return upgradeGate('Бібліотека документів', 'Статути, довідки, сертифікати й CV в одному місці — з нагадуваннями, коли спливає строк дії.');
     const docs = ACC.docs; const exp = docs.filter(l => docDays(l) != null && docDays(l) < 15);
     return `<div class="ph"><div><h1>Бібліотека документів</h1><p>Файли компанії для заявок. Доступні лише учасникам вашої компанії.</p></div></div>
     ${exp.length ? `<div class="card note note--warn"><b>Спливає строк дії: ${exp.map(l => esc(l.name)).join(', ')}</b><p>Оновіть ці документи заздалегідь.</p></div>` : ''}
@@ -484,7 +524,7 @@
   }
   library.title = () => 'Бібліотека';
   library.mount = view => {
-    const c = ACC.client;
+    const c = ACC.client; if (!$('#upForm', view)) return;
     $('#upForm', view).onsubmit = async e => {
       e.preventDefault(); const f = $('#upFile', view).files[0]; if (!f) return;
       if (f.size > 25 * 1024 * 1024) { toast('Файл більший за 25 МБ', 'bad'); return; }
@@ -494,17 +534,18 @@
       const up = await c.storage.from('org-documents').upload(path, f, { contentType: f.type || 'application/octet-stream', upsert: false });
       if (up.error) { toast('Не вдалося завантажити файл. Спробуйте ще раз.', 'bad'); btn.disabled = false; btn.textContent = 'Завантажити'; return; }
       const { data, error } = await c.from('documents').insert({ org_id: ACC.org.id, name: f.name.slice(0, 200), doc_type: $('#upType', view).value, valid_until: $('#upValid', view).value || null, path, size_bytes: f.size, mime: (f.type || '').slice(0, 120), uploaded_by: ACC.uid }).select().single();
-      if (error) { await c.storage.from('org-documents').remove([path]); toast('Не вдалося зберегти документ.', 'bad'); btn.disabled = false; btn.textContent = 'Завантажити'; return; }
-      ACC.docs.unshift(data); render(); toast('Документ додано');
+      if (error) { await c.storage.from('org-documents').remove([path]); toast(planErr(error) || 'Не вдалося зберегти документ.', 'bad'); btn.disabled = false; btn.textContent = 'Завантажити'; return; }
+      ACC.docs.unshift(data); SUB().usage.docs++; render(); toast('Документ додано');
     };
     $$('[data-open]', view).forEach(b => b.onclick = async () => { const d = ACC.docs.find(x => x.id === b.dataset.open); const w = window.open('', '_blank'); const { data, error } = await c.storage.from('org-documents').createSignedUrl(d.path, 120); if (error) { w && w.close(); toast('Не вдалося відкрити файл', 'bad'); return; } if (w) w.location = data.signedUrl; else location.href = data.signedUrl; });
     $$('[data-rm]', view).forEach(b => b.onclick = async () => { const d = ACC.docs.find(x => x.id === b.dataset.rm); if (!confirm(`Видалити «${d.name}»?`)) return;
       const r1 = await c.storage.from('org-documents').remove([d.path]); const r2 = await c.from('documents').delete().eq('id', d.id);
-      if (r1.error || r2.error) { toast('Не вдалося видалити', 'bad'); return; } ACC.docs = ACC.docs.filter(x => x.id !== d.id); render(); toast('Документ видалено'); });
+      if (r1.error || r2.error) { toast('Не вдалося видалити', 'bad'); return; } ACC.docs = ACC.docs.filter(x => x.id !== d.id); SUB().usage.docs = Math.max(0, SUB().usage.docs - 1); render(); toast('Документ видалено'); });
   };
 
   /* ===================== ANALYTICS ===================== */
   function analytics() {
+    if (!can('analytics')) return upgradeGate('Аналітика', 'Частка перемог, причини відмов, ринок за країнами й медіанні бюджети — щоб подаватися туди, де ви виграєте.');
     const out = Object.values(S.outcomes); const won = out.filter(x => x === 'won').length, lost = out.filter(x => x === 'lost').length;
     const pipeN = Object.keys(S.pipeline).length; const submitted = Object.values(S.pipeline).filter(x => ['submitted', 'result'].includes(x)).length;
     const reasons = {}; Object.values(S.dismissed).forEach(d => { const r = (d && d.r) || String(d); reasons[r] = (reasons[r] || 0) + 1; });
@@ -529,10 +570,42 @@
   }
   analytics.title = () => 'Аналітика';
 
+  /* ===================== ПІДПИСКА ===================== */
+  function billingTab(admin) {
+    const o = ACC.org, sub = SUB(), u = sub.usage, L = lim(), period = local.get('period', 'month');
+    const trialLeft = Math.max(0, daysTo(o.trial_ends_at) ?? 0), paidLeft = daysTo(o.paid_until);
+    const status = expired() ? `<span class="chip chip--bad">Неактивна</span> ${o.plan === 'trial' ? 'Пробний період завершився' : 'Термін оплати минув'} — дані збережені, редагування вимкнене.`
+      : o.plan === 'trial' ? `<span class="chip ${trialLeft <= 3 ? 'chip--warn' : 'chip--good'}">Активний</span> Залишилось ${trialLeft} ${plural(trialLeft, 'день', 'дні', 'днів')} — до ${fmtDate(new Date(o.trial_ends_at))}. Усі можливості Pro.`
+      : `<span class="chip chip--good">Активна</span> ${o.paid_until ? `Оплачено до ${fmtDate(new Date(o.paid_until))}${paidLeft != null && paidLeft <= 7 ? ' — скоро продовження' : ''}` : 'Підписка активна'} · ${o.billing_period === 'year' ? 'щорічна оплата' : 'щомісячна оплата'}`;
+    const meter = (label, used, max, off) => `<div class="meter"><div class="meter__top"><span>${label}</span><b class="num">${off ? 'недоступно' : `${used} / ${max}`}</b></div><div class="meter__bar"><i style="width:${off ? 0 : Math.min(100, max ? used / max * 100 : 100)}%"></i></div></div>`;
+    const req = sub.request;
+    const current = expired() ? null : o.plan;
+    return `<div class="bill">
+      <section class="card bill__now"><div><small class="muted">Ваш тариф</small><h2>${esc(PLAN_NAME[o.plan] || o.plan)}</h2><p>${status}</p>
+        ${req ? `<p class="bill__req">Запит на тариф <b>${esc((PLANS.find(p => p.id === req.plan) || { name: 'Enterprise' }).name)}</b> (${req.period === 'year' ? 'щороку' : 'щомісяця'}) надіслано ${fmtDate(new Date(req.created_at))}. Ми надішлемо рахунок на ${esc(ACC.email)}.</p>` : ''}</div>
+        <div class="bill__meters">${meter('Користувачі', u.members + u.invites, L.seats)}${meter('Документи в бібліотеці', u.docs, L.docs, !L.library)}
+          <div class="meter"><div class="meter__top"><span>Ринки</span><b>${L.markets === 2 ? 'Україна + ЄС' : L.markets === 1 ? (market() === 'prozorro' ? 'Україна' : 'ЄС') : '—'}</b></div></div></div></section>
+      <div class="bill__head"><h2>Тарифи</h2><div class="seg" role="group" aria-label="Період оплати"><button type="button" data-period="month" aria-pressed="${period === 'month'}">Щомісяця</button><button type="button" data-period="year" aria-pressed="${period === 'year'}">Щороку <em>−20%</em></button></div></div>
+      <div class="bill__plans">${PLANS.map(p => `<article class="bplan${p.pop ? ' bplan--pop' : ''}${current === p.id ? ' bplan--cur' : ''}">
+        ${current === p.id ? '<span class="bplan__badge">Ваш тариф</span>' : p.pop ? '<span class="bplan__badge">Найчастіший вибір</span>' : ''}
+        <h3>${p.name}</h3><p class="muted">${p.for}</p><p class="bplan__price"><b class="num">€${period === 'year' ? p.y : p.m}</b><span>/ міс${period === 'year' ? ', оплата за рік' : ''}</span></p>
+        <ul>${p.f.map(x => `<li>${x}</li>`).join('')}</ul>
+        ${admin ? (current === p.id && !(o.plan === 'trial') ? '<button class="btn btn--ghost" type="button" disabled>Поточний тариф</button>' : `<button class="btn ${p.pop ? 'btn--primary' : 'btn--ghost'}" type="button" data-want="${p.id}"${req && req.plan === p.id ? ' disabled' : ''}>${req && req.plan === p.id ? 'Запит надіслано' : `Обрати ${p.name}`}</button>`) : ''}</article>`).join('')}</div>
+      <section class="card bill__ent"><div><h3>Enterprise</h3><p class="muted">Більше користувачів, власні умови підтримки й інтеграції. Від €1 500 на місяць.</p></div>${admin ? `<button class="btn btn--ghost" type="button" data-want="enterprise"${req && req.plan === 'enterprise' ? ' disabled' : ''}>${req && req.plan === 'enterprise' ? 'Запит надіслано' : 'Обговорити'}</button>` : ''}</section>
+      <p class="muted" style="margin:0">${admin ? '' : 'Змінити тариф може власник або адміністратор компанії. '}Оплата за рахунком, без автоматичних списань. Ціни без ПДВ. Питання — <a href="mailto:${esc(CFG.contactEmail || '')}">${esc(CFG.contactEmail || '')}</a>.</p></div>`;
+  }
+  function paintBanner() {
+    const el = $('#planBanner'); if (!el || !ACC || !ACC.org) return; const o = ACC.org; let html = '';
+    if (expired()) html = `<b>${o.plan === 'trial' ? 'Пробний період завершився.' : 'Підписка неактивна.'}</b> Дані збережені — оберіть тариф, щоб продовжити роботу. <a href="#/settings?tab=billing">Обрати тариф</a>`;
+    else if (o.plan === 'trial' && daysTo(o.trial_ends_at) <= 3) { const d = Math.max(0, daysTo(o.trial_ends_at)); html = `Пробний період закінчується ${d === 0 ? 'сьогодні' : d === 1 ? 'завтра' : `через ${d} ${plural(d, 'день', 'дні', 'днів')}`}. <a href="#/settings?tab=billing">Обрати тариф</a>`; }
+    else if (o.plan !== 'trial' && o.paid_until && daysTo(o.paid_until) <= 3) html = `Оплачений період закінчується ${fmtDate(new Date(o.paid_until))}. <a href="#/settings?tab=billing">Продовжити</a>`;
+    el.innerHTML = html; el.hidden = !html; el.classList.toggle('plan-banner--bad', expired());
+  }
+
   /* ===================== SETTINGS ===================== */
   function settings(_, params) {
-    const tab = params.tab || 'search'; const o = ACC.org; const admin = ACC.role !== 'member'; const dis = admin ? '' : ' disabled';
-    const tabs = [['search', 'Профіль пошуку'], ['company', 'Компанія'], ['team', 'Команда'], ['account', 'Акаунт']];
+    const tab = params.tab || (expired() ? 'billing' : 'search'); const o = ACC.org; const admin = ACC.role !== 'member'; const dis = admin ? '' : ' disabled';
+    const tabs = [['billing', 'Підписка'], ['search', 'Профіль пошуку'], ['company', 'Компанія'], ['team', 'Команда'], ['account', 'Акаунт']];
     const bodies = {
       search: `<form class="form" id="srForm" style="max-width:760px">
         ${admin ? '' : '<p style="color:var(--warn);margin:0">Змінювати профіль пошуку можуть власник або адміністратор.</p>'}
@@ -547,11 +620,12 @@
         <div class="field"><label for="coCode">Реєстраційний код</label><input id="coCode" value="${esc(o.reg_code || '')}"${dis}></div>
         <div class="field"><label for="coSite">Сайт</label><input id="coSite" value="${esc(o.website || '')}" placeholder="https://"${dis}></div>
         <div class="field"><label for="coSize">Кількість працівників</label><select id="coSize"${dis}>${['', '1-10', '11-50', '51-250', '251-1000', '1000+'].map(s => `<option value="${s}"${(o.size || '') === s ? ' selected' : ''}>${s || '—'}</option>`).join('')}</select></div>
-        <p class="muted" style="margin:0">Тариф: ${o.plan === 'trial' ? `пробний період до ${fmtDate(new Date(o.trial_ends_at))}` : esc(o.plan)}.</p>
+        <p class="muted" style="margin:0">Тариф: ${esc(PLAN_NAME[o.plan] || o.plan)}. <a href="#/settings?tab=billing">Керувати підпискою</a></p>
         ${admin ? '<div><button class="btn btn--primary" type="submit">Зберегти</button></div>' : ''}</form>`,
-      team: `<div class="form"><div class="card" style="padding:8px 16px">${ACC.team.map(m => `<div class="teamline"><span class="avatar avatar--sm">${esc(initials(m.name))}</span><div style="flex:1">${esc(m.name)}<small>${esc(m.role)}</small></div></div>`).join('')}
+      billing: billingTab(admin),
+      team: `<div class="form">${(() => { const u = SUB().usage, used = u.members + u.invites, L = lim().seats; return `<div class="meter"><div class="meter__top"><span>Місця в команді</span><b class="num">${used} / ${L}</b></div><div class="meter__bar"><i style="width:${Math.min(100, L ? used / L * 100 : 100)}%"></i></div>${used >= L ? '<small>Усі місця зайняті. <a href="#/settings?tab=billing">Збільшити ліміт</a></small>' : ''}</div>`; })()}<div class="card" style="padding:8px 16px">${ACC.team.map(m => `<div class="teamline"><span class="avatar avatar--sm">${esc(initials(m.name))}</span><div style="flex:1">${esc(m.name)}<small>${esc(m.role)}</small></div></div>`).join('')}
         ${ACC.invites.map(e => `<div class="teamline"><span class="avatar avatar--sm">${esc(e[0].toUpperCase())}</span><div style="flex:1">${esc(e)}<small>Очікує реєстрації</small></div>${admin ? `<button class="icon-btn" type="button" data-uninv="${esc(e)}" aria-label="Скасувати запрошення">${ICON.trash}</button>` : ''}</div>`).join('')}</div>
-        ${admin ? `<form id="invForm" class="inline-form"><label class="sr-only" for="invEmail">Email колеги</label><input class="select" id="invEmail" type="email" required placeholder="email колеги"><button class="btn btn--primary" type="submit">Запросити</button></form>
+        ${admin ? `<form id="invForm" class="inline-form"><label class="sr-only" for="invEmail">Email колеги</label><input class="select" id="invEmail" type="email" required placeholder="email колеги"><button class="btn btn--primary" type="submit"${SUB().usage.members + SUB().usage.invites >= lim().seats ? ' disabled' : ''}>Запросити</button></form>
         <p class="muted" style="margin:0">Колега реєструється з цим email — і автоматично потрапляє у вашу компанію.</p>` : ''}</div>`,
       account: `<form class="form" id="acForm"><div class="field"><label for="acName">Ім’я та прізвище</label><input id="acName" value="${esc(ACC.profile.full_name || '')}" required minlength="2"></div>
         <div class="field"><label for="acJob">Посада</label><input id="acJob" value="${esc(ACC.profile.job_title || '')}"></div>
@@ -585,14 +659,24 @@
     $('#invForm', view)?.addEventListener('submit', async e => {
       e.preventDefault(); const email = $('#invEmail', view).value.trim().toLowerCase();
       const { error } = await c.from('invitations').insert({ org_id: ACC.org.id, email, invited_by: ACC.uid });
-      if (error) { toast(/duplicate|unique/i.test(error.message) ? 'Цю людину вже запрошено' : 'Не вдалося додати запрошення', 'bad'); return; }
-      ACC.invites.push(email); render(); toast('Запрошення додано');
+      if (error) { toast(planErr(error) || (/duplicate|unique/i.test(error.message) ? 'Цю людину вже запрошено' : 'Не вдалося додати запрошення'), 'bad'); return; }
+      ACC.invites.push(email); SUB().usage.invites++; render(); toast('Запрошення додано');
     });
-    $$('[data-uninv]', view).forEach(b => b.onclick = async () => { const { error } = await c.from('invitations').delete().eq('org_id', ACC.org.id).eq('email', b.dataset.uninv); if (error) { toast('Не вдалося скасувати', 'bad'); return; } ACC.invites = ACC.invites.filter(x => x !== b.dataset.uninv); render(); });
+    $$('[data-uninv]', view).forEach(b => b.onclick = async () => { const { error } = await c.from('invitations').delete().eq('org_id', ACC.org.id).eq('email', b.dataset.uninv); if (error) { toast('Не вдалося скасувати', 'bad'); return; } ACC.invites = ACC.invites.filter(x => x !== b.dataset.uninv); SUB().usage.invites = Math.max(0, SUB().usage.invites - 1); render(); });
     $('#acForm', view)?.addEventListener('submit', async e => {
       e.preventDefault(); const patch = { full_name: $('#acName', view).value.trim(), job_title: $('#acJob', view).value.trim() || null };
       const { error } = await c.from('profiles').update(patch).eq('id', ACC.uid);
       if (error) { toast('Не вдалося зберегти', 'bad'); return; } Object.assign(ACC.profile, patch); ACC.name = patch.full_name; ACC.firstName = patch.full_name.split(' ')[0]; paintAccount(); toast('Збережено');
+    });
+    $$('[data-period]', view).forEach(b => b.onclick = () => { local.set('period', b.dataset.period); render(); });
+    $$('[data-want]', view).forEach(b => b.onclick = async () => {
+      const plan = b.dataset.want, period = local.get('period', 'month'); b.disabled = true;
+      const { error } = await c.from('plan_requests').insert({ org_id: ACC.org.id, plan, period, requested_by: ACC.uid });
+      if (error) { b.disabled = false; toast('Не вдалося надіслати запит. Напишіть нам на ' + esc(CFG.contactEmail || ''), 'bad'); return; }
+      SUB().request = { plan, period, created_at: new Date().toISOString() }; render();
+      const name = (PLANS.find(p => p.id === plan) || { name: 'Enterprise' }).name;
+      const mail = `mailto:${encodeURIComponent(CFG.contactEmail || '')}?subject=${encodeURIComponent(`Tendera: тариф ${name} для ${ACC.org.name}`)}&body=${encodeURIComponent(`Компанія: ${ACC.org.name}${ACC.org.reg_code ? ' (' + ACC.org.reg_code + ')' : ''}\nТариф: ${name}, оплата ${period === 'year' ? 'щороку' : 'щомісяця'}\nКонтакт: ${ACC.name}, ${ACC.email}`)}`;
+      toast(`Запит на тариф ${esc(name)} надіслано. Рахунок прийде на ${esc(ACC.email)} протягом робочого дня. <a href="${mail}">Написати нам</a>`);
     });
     $$('[data-theme-set]', view).forEach(b => b.onclick = () => { setTheme(b.dataset.themeSet); render(); });
     $('#signOut2', view)?.addEventListener('click', signOut);
@@ -605,7 +689,7 @@
   const pops = [['#bellBtn', '#bellPop'], ['#meBtn', '#mePop']];
   pops.forEach(([b, p]) => { $(b).onclick = e => { e.stopPropagation(); const el = $(p); const open = el.hidden; pops.forEach(([bb, q]) => { $(q).hidden = true; $(bb).setAttribute('aria-expanded', 'false'); }); el.hidden = !open; $(b).setAttribute('aria-expanded', String(open)); if (b === '#bellBtn' && open) { local.set('seen', Date.now()); $('.dot', $(b))?.remove(); } }; });
   document.addEventListener('click', e => pops.forEach(([b, p]) => { const el = $(p); if (!el.hidden && !el.contains(e.target)) { el.hidden = true; $(b).setAttribute('aria-expanded', 'false'); } }));
-  $('#orgBtn').onclick = () => { location.hash = '#/settings?tab=company'; };
+  $('#orgBtn').onclick = () => { location.hash = '#/settings?tab=billing'; };
   $('#signOut').onclick = signOut;
   async function signOut() { await AUTH.client.auth.signOut(); location.replace(AUTH.siteRoot() + 'auth/?mode=login'); }
   function paintAccount() {
@@ -613,7 +697,7 @@
     $('#orgLogo').textContent = initials(oname.replace(/^(ТОВ|ПП|ФОП|ПрАТ|АТ|КП|Sp\. z o\.o\.|GmbH)\s*/i, '').replace(/[«»"']/g, ''));
     const days = o.trial_ends_at ? Math.max(0, Math.ceil((new Date(o.trial_ends_at) - Date.now()) / 864e5)) : 0;
     const plan = o.plan || 'trial';
-    $('#orgPlan').textContent = plan === 'trial' ? `Пробний період · ${days} ${plural(days, 'день', 'дні', 'днів')}` : `Тариф ${plan[0].toUpperCase() + plan.slice(1)}`;
+    $('#orgPlan').textContent = expired() ? 'Підписка неактивна' : plan === 'trial' ? `Пробний період · ${days} ${plural(days, 'день', 'дні', 'днів')}` : `Тариф ${PLAN_NAME[plan] || plan}`;
     $('#meName').textContent = ACC.name; $('#meMail').textContent = ACC.email; $('#meBtn').textContent = initials(ACC.name); $('#meBtn').title = ACC.name;
     const M = DATA.meta; $('#freshPill').textContent = DATA.loading ? 'Завантаження тендерів…' : M && M.generatedAt ? `Оновлено ${ago(M.generatedAt)}` : 'Дані оновлюються';
     $('#freshPill').title = M && M.counts ? `Відкритих тендерів: Prozorro ${nf.format(M.counts.ua)}, TED ${nf.format(M.counts.eu)}` : '';
@@ -629,7 +713,7 @@
     if (items.length) $('#bellBtn').insertAdjacentHTML('beforeend', '<i class="dot"></i>');
   }
   const pal = $('#palette'), pin = $('#paletteInput'), plist = $('#paletteList');
-  const NAV = [['Огляд', '#/'], ['Тендери', '#/tenders'], ['Pipeline', '#/pipeline'], ['Заявки', '#/bid'], ['Бібліотека документів', '#/library'], ['Аналітика', '#/analytics'], ['Профіль пошуку', '#/settings?tab=search'], ['Команда', '#/settings?tab=team'], ['Акаунт', '#/settings?tab=account']];
+  const NAV = [['Огляд', '#/'], ['Тендери', '#/tenders'], ['Pipeline', '#/pipeline'], ['Заявки', '#/bid'], ['Бібліотека документів', '#/library'], ['Аналітика', '#/analytics'], ['Підписка і тарифи', '#/settings?tab=billing'], ['Профіль пошуку', '#/settings?tab=search'], ['Команда', '#/settings?tab=team'], ['Акаунт', '#/settings?tab=account']];
   let sel = 0, shown = [];
   function openPal() { pal.hidden = false; pin.value = ''; drawPal(); pin.focus(); }
   const closePal = () => { pal.hidden = true; };
@@ -653,7 +737,11 @@
   });
 
   /* ---------- boot ---------- */
-  function rescore() { P = buildProfile(ACC.org); DATA.items.forEach(t => { t._s = score(t); }); }
+  function rescore() {
+    // тариф Start — один ринок: Україна (Prozorro) або ЄС (TED), за профілем пошуку
+    const m = market(); DATA.items = m ? DATA.all.filter(t => t.src === m) : DATA.all; DATA.byId = new Map(DATA.items.map(t => [t.id, t]));
+    P = buildProfile(ACC.org); DATA.items.forEach(t => { t._s = score(t); });
+  }
   async function loadData() {
     const get = async f => {
       const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 60000);
@@ -664,7 +752,7 @@
     const now = Date.now();
     const items = [].concat(ua.status === 'fulfilled' ? ua.value.items || [] : [], eu.status === 'fulfilled' ? eu.value.items || [] : []).filter(t => t && t.id && t.end && Date.parse(t.end) > now);
     items.forEach(t => { t.cpv = t.cpv || []; t.t = t.t || ''; t.b = t.b || ''; });
-    DATA.items = items; DATA.byId = new Map(items.map(t => [t.id, t]));
+    DATA.all = items; DATA.items = items; DATA.byId = new Map(items.map(t => [t.id, t]));
     if (!items.length) DATA.error = 'Оновлення з Prozorro і TED запускається автоматично щогодини. Якщо сайт щойно опубліковано, перше оновлення займе до 15 хвилин.';
   }
   async function loadAccount(session) {
@@ -691,6 +779,8 @@
     SYNC.forEach(k => { if (data[k] && typeof data[k] === 'object' && !Array.isArray(data[k])) S[k] = data[k]; });
     ACC.team = (team.data || []).map(m => ({ name: (m.profiles && m.profiles.full_name) || (m.user_id === uid ? name : 'Учасник'), role: (m.profiles && m.profiles.job_title) || ROLE_UA[m.role] }));
     ACC.invites = (inv.data || []).map(i => i.email); ACC.docs = docs.error ? [] : (docs.data || []);
+    const sub = await c.rpc('org_subscription', { p_org: ACC.org.id });
+    ACC.sub = !sub.error && sub.data ? { ...sub.data, limits: { ...(LIMITS[sub.data.effective] || LIMITS.trial), ...sub.data.limits } } : localSub(ACC.org);
     return true;
   }
   function createOrgModal() {
