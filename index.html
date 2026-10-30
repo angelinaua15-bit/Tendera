@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tendera — державні тендери Європи, прочитані за вас</title>
+<meta name="description" content="Tendera — AI-платформа, яка щоранку знаходить державні та донорські тендери в Україні, Польщі та ЄС, пояснює вимоги за 30 секунд і готує заявку.">
+<meta name="theme-color" content="#0B1A26">
+<link rel="icon" href="brand/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="brand/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Tendera — державні тендери Європи, прочитані за вас">
+<meta property="og:description" content="AI знаходить закупівлі, які ваша компанія може виграти, пояснює вимоги і готує заявку.">
+<meta property="og:image" content="brand/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://images.unsplash.com">
+<link rel="stylesheet" href="assets/css/fonts.css">
+<link rel="stylesheet" href="assets/css/landing.css">
+</head>
+<body>
+<a class="skip" href="#main" data-i18n="skip">Перейти до змісту</a>
+
+<header class="nav" id="nav">
+  <div class="nav__inner">
+    <a class="nav__brand" href="#top" aria-label="Tendera — на початок">
+      <img src="brand/mark.svg" width="34" height="34" alt="">
+      <span>Tendera</span>
+    </a>
+    <nav class="nav__links" aria-label="Основна навігація">
+      <a href="#how" data-i18n="nav.how">Як це працює</a>
+      <a href="#brief" data-i18n="nav.ai">AI-бриф</a>
+      <a href="#sectors" data-i18n="nav.sectors">Галузі</a>
+      <a href="#pricing" data-i18n="nav.pricing">Тарифи</a>
+      <a href="#faq" data-i18n="nav.faq">Питання</a>
+    </nav>
+    <div class="nav__actions">
+      <div class="lang" role="group" aria-label="Мова">
+        <button type="button" data-lang="uk" aria-pressed="true">UA</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <a class="btn btn--ghost nav__login" href="app/" data-i18n="nav.login">Увійти</a>
+      <a class="btn btn--primary" href="app/?onboard=1" data-i18n="nav.cta">Відкрити демо</a>
+      <button class="nav__burger" type="button" aria-label="Меню" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="mobile-menu" id="mobile-menu" hidden>
+    <a href="#how" data-i18n="nav.how">Як це працює</a>
+    <a href="#brief" data-i18n="nav.ai">AI-бриф</a>
+    <a href="#sectors" data-i18n="nav.sectors">Галузі</a>
+    <a href="#pricing" data-i18n="nav.pricing">Тарифи</a>
+    <a href="#faq" data-i18n="nav.faq">Питання</a>
+    <a href="app/" data-i18n="nav.login">Увійти</a>
+  </div>
+</header>
+
+<main id="main">
+<!-- HERO -->
+<section class="hero" id="top">
+  <div class="hero__grain" aria-hidden="true"></div>
+  <div class="hero__inner">
+    <div class="hero__copy">
+      <p class="hero__status"><span class="live-dot" aria-hidden="true"></span><span data-i18n="hero.status">Ранній доступ для компаній з України, Польщі та ЄС</span></p>
+      <h1 class="hero__title">
+        <span class="hero__line" data-i18n="hero.t1">Державні тендери Європи,</span>
+        <span class="hero__line hero__line--serif" data-i18n="hero.t2">прочитані за вас.</span>
+      </h1>
+      <p class="hero__lead" data-i18n="hero.lead">Tendera щоранку знаходить закупівлі, які ваша компанія реально може виграти, пояснює вимоги за 30 секунд і готує заявку. Без тендерного відділу і без сотень сторінок документації.</p>
+      <form class="finder" action="app/" method="get" id="finder">
+        <input type="hidden" name="onboard" value="1">
+        <label class="sr-only" for="company" data-i18n="hero.label">Код компанії або сайт</label>
+        <input id="company" name="company" class="finder__input" autocomplete="organization" placeholder="ЄДРПОУ, NIP, VAT або сайт компанії" data-i18n-ph="hero.ph">
+        <button class="btn btn--primary btn--lg" type="submit" data-i18n="hero.btn">Знайти мої тендери</button>
+      </form>
+      <p class="hero__fine" data-i18n="hero.fine">14 днів безкоштовно. Картка не потрібна.</p>
+    </div>
+
+    <figure class="hero__stage" aria-label="Приклад AI-брифу тендера">
+      <div class="live-photo live-photo--hero" data-parallax>
+        <img src="https://images.unsplash.com/photo-1768101225267-c6fc5678c113?auto=format&fit=crop&w=1400&q=80" alt="Скляні фасади бізнес-центру знизу вгору" fetchpriority="high">
+        <div class="live-photo__tint"></div>
+        <div class="scanline" aria-hidden="true"></div>
+      </div>
+
+      <div class="brief-card" id="heroBrief">
+        <div class="brief-card__head">
+          <img src="brand/mark.svg" width="22" height="22" alt="">
+          <span data-i18n="card.title">AI-бриф готовий</span>
+          <span class="brief-card__time">0:27</span>
+        </div>
+        <p class="brief-card__subject" data-i18n="card.subject">Реконструкція системи теплопостачання лікарні, Львів</p>
+        <dl class="brief-card__facts">
+          <div><dt data-i18n="card.budget">Бюджет</dt><dd class="num">₴ 48 600 000</dd></div>
+          <div><dt data-i18n="card.deadline">Дедлайн</dt><dd data-i18n="card.deadlineV">через 16 днів</dd></div>
+          <div><dt data-i18n="card.pages">Документація</dt><dd data-i18n="card.pagesV">214 сторінок</dd></div>
+        </dl>
+        <p class="brief-card__typed" aria-live="polite"><span id="typed"></span><span class="caret" aria-hidden="true"></span></p>
+      </div>
+
+      <div class="match-chip" aria-hidden="true">
+        <svg viewBox="0 0 48 48" width="48" height="48"><circle cx="24" cy="24" r="20" class="ring-bg"/><circle cx="24" cy="24" r="20" class="ring-fg" id="heroRing"/></svg>
+        <div><b class="num" id="heroScore">0</b><span data-i18n="card.match">збіг з профілем</span></div>
+      </div>
+      <div class="verdict-chip" aria-hidden="true"><span class="verdict-chip__dot"></span><span data-i18n="card.verdict">Рекомендуємо подаватись</span></div>
+      <figcaption class="sr-only" data-i18n="card.sr">Приклад: AI прочитав 214 сторінок документації за 27 секунд і рекомендує подаватись.</figcaption>
+    </figure>
+  </div>
+
+  <div class="sources" aria-label="Джерела даних">
+    <span class="sources__label" data-i18n="sources.label">Читаємо офіційні джерела</span>
+    <ul>
+      <li>Prozorro</li><li>TED</li><li>e-Zamówienia</li><li data-i18n="sources.wb">Світовий банк</li><li data-i18n="sources.ebrd">ЄБРР</li><li data-i18n="sources.undp">ПРООН</li>
+    </ul>
+  </div>
+</section>
+
+<!-- MARKET -->
+<section class="market" aria-labelledby="market-title">
+  <div class="wrap market__grid">
+    <p class="market__figure num" aria-hidden="true">$13<small data-i18n="market.unit"> трлн</small></p>
+    <div>
+      <h2 id="market-title" class="h2" data-i18n="market.title">Найбільший ринок світу закритий складністю, а не законом</h2>
+      <p class="body-l" data-i18n="market.p">Уряди щороку витрачають близько $13 трлн на контракти з компаніями. Більшість малих і середніх компаній бачить лише частину цього ринку: тендери розкидані по десятках порталів і мов, а одна пропущена довідка означає дискваліфікацію.</p>
+      <p class="source-note"><span data-i18n="market.src">Оцінка</span> <a href="https://www.open-contracting.org/global-procurement-spend" target="_blank" rel="noopener">Open Contracting Partnership і Spend Network</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- LIVE MAP -->
+<section class="radar" aria-labelledby="radar-title">
+  <div class="wrap radar__grid">
+    <div class="radar__copy">
+      <h2 id="radar-title" class="h2 h2--light" data-i18n="radar.title">Кожні 30 хвилин ми перечитуємо Європу</h2>
+      <p class="body-l body-l--light" data-i18n="radar.p">Нові оголошення з Prozorro, TED і національних порталів нормалізуються в одну схему, перекладаються вашою мовою і порівнюються з профілем вашої компанії. Ви бачите тільки те, що підходить.</p>
+      <ol class="feed" id="feed" aria-live="off"></ol>
+      <p class="demo-note" data-i18n="radar.note">Візуалізація на демонстраційних даних.</p>
+    </div>
+    <div class="radar__map">
+      <canvas id="map" aria-label="Карта Європи з точками нових тендерів" role="img"></canvas>
+      <div class="radar__counter">
+        <span data-i18n="radar.counter">Відкритих можливостей для вашого профілю</span>
+        <b class="num" id="mapValue">€0</b>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW: scrollytelling -->
+<section class="how" id="how" aria-labelledby="how-title">
+  <div class="wrap">
+    <h2 id="how-title" class="h2" data-i18n="how.title">Від коду компанії до готової заявки</h2>
+  </div>
+  <div class="wrap how__grid">
+    <div class="how__stage" aria-hidden="true">
+      <div class="how__frame">
+        <div class="live-photo is-active" data-step="0"><img loading="lazy" src="https://images.unsplash.com/photo-1429497419816-9ca5cfb4571a?auto=format&fit=crop&w=1200&q=80" alt=""></div>
+        <div class="live-photo" data-step="1"><img loading="lazy" src="https://images.unsplash.com/photo-1577450775949-58ec8d02cad9?auto=format&fit=crop&w=1200&q=80" alt=""></div>
+        <div class="live-photo" data-step="2"><img loading="lazy" src="https://images.unsplash.com/photo-1758691737182-d42aefd6dee8?auto=format&fit=crop&w=1200&q=80" alt=""></div>
+        <div class="live-photo" data-step="3"><img loading="lazy" src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1200&q=80" alt=""></div>
+        <div class="how__progress"><span id="howBar"></span></div>
+      </div>
+    </div>
+    <ol class="how__steps">
+      <li class="how__step is-active" data-step="0">
+        <span class="how__n num">1</span>
+        <h3 data-i18n="how.s1t">Профіль за 3 хвилини</h3>
+        <p data-i18n="how.s1p">Введіть код ЄДРПОУ, NIP або VAT. AI сам знайде галузі, коди CPV, регіони й досвід з відкритих реєстрів і сайту компанії. Вам лишається підтвердити.</p>
+      </li>
+      <li class="how__step" data-step="1">
+        <span class="how__n num">2</span>
+        <h3 data-i18n="how.s2t">Ранковий відбір о 8:00</h3>
+        <p data-i18n="how.s2p">Щоранку на пошту і в Telegram приходять 3–10 тендерів з оцінкою збігу від 0 до 100 і поясненням, чому кожен підходить саме вам.</p>
+      </li>
+      <li class="how__step" data-step="2">
+        <span class="how__n num">3</span>
+        <h3 data-i18n="how.s3t">Рішення за хвилину</h3>
+        <p data-i18n="how.s3p">AI-бриф на одну сторінку: що купують, бюджет, кваліфікація, гарантії, ризики. І чесний вердикт: подаватись чи ні, та чого вам бракує.</p>
+      </li>
+      <li class="how__step" data-step="3">
+        <span class="how__n num">4</span>
+        <h3 data-i18n="how.s4t">Заявка, зібрана на 80%</h3>
+        <p data-i18n="how.s4p">Чекліст документів, чернетки текстових частин з вашої бібліотеки й перевірка відповідності вимогам до подачі. Фінальне рішення завжди за вами.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- BRIEF anatomy -->
+<section class="anatomy" id="brief" aria-labelledby="brief-title">
+  <div class="wrap">
+    <h2 id="brief-title" class="h2 h2--light" data-i18n="brief.title">Кожне твердження має сторінку і пункт</h2>
+    <p class="body-l body-l--light anatomy__lead" data-i18n="brief.p">AI не вигадує. Він витягує вимоги з документації з посиланням на джерело, а там, де відповіді немає, так і каже. Довіра тут важливіша за швидкість.</p>
+  </div>
+  <div class="wrap anatomy__grid" id="anatomy">
+    <article class="doc" aria-label="Фрагмент тендерної документації">
+      <header class="doc__head"><span data-i18n="brief.docName">Тендерна документація</span><span class="num">с. 14 / 214</span></header>
+      <p class="doc__h" data-i18n="brief.docH">Розділ 3. Кваліфікаційні критерії</p>
+      <p data-i18n="brief.d1">3.1. Учасник повинен мати досвід виконання щонайменше одного аналогічного договору за останні 3 роки.</p>
+      <p><mark data-k="0" data-i18n="brief.d2">3.2. Учасник надає банківську гарантію забезпечення тендерної пропозиції у розмірі 0,5% очікуваної вартості.</mark></p>
+      <p data-i18n="brief.d3">3.3. Наявність матеріально-технічної бази, необхідної для виконання робіт, підтверджується довідкою в довільній формі.</p>
+      <p><mark data-k="1" data-i18n="brief.d4">3.4. Строк виконання робіт не може перевищувати 120 календарних днів з дати підписання договору.</mark></p>
+      <p><mark data-k="2" data-i18n="brief.d5">3.5. Щонайменше двоє працівників мають кваліфікаційні сертифікати інженера технічного нагляду.</mark></p>
+      <p class="doc__fade" data-i18n="brief.d6">3.6. Документи подаються в електронному вигляді з накладенням кваліфікованого електронного підпису…</p>
+    </article>
+    <ul class="extract" aria-label="Що витягнув AI">
+      <li data-k="0"><span class="extract__tag extract__tag--warn" data-i18n="brief.e1t">Гарантія</span><b data-i18n="brief.e1">Банківська гарантія 0,5% — ₴ 243 000</b><small>с. 14, п. 3.2</small></li>
+      <li data-k="1"><span class="extract__tag extract__tag--risk" data-i18n="brief.e2t">Ризик</span><b data-i18n="brief.e2">120 днів на роботи, що зазвичай тривають 180</b><small>с. 14, п. 3.4</small></li>
+      <li data-k="2"><span class="extract__tag" data-i18n="brief.e3t">Команда</span><b data-i18n="brief.e3">2 інженери техн. нагляду — у вас є обидва в бібліотеці</b><small>с. 14, п. 3.5</small></li>
+    </ul>
+  </div>
+</section>
+
+<!-- SECTORS -->
+<section class="sectors" id="sectors" aria-labelledby="sectors-title">
+  <div class="wrap">
+    <h2 id="sectors-title" class="h2" data-i18n="sectors.title">Для компаній, які будують, постачають і обслуговують</h2>
+  </div>
+  <div class="wrap sectors__grid">
+    <article class="sector sector--tall">
+      <div class="live-photo" data-parallax><img loading="lazy" src="https://images.unsplash.com/photo-1429497419816-9ca5cfb4571a?auto=format&fit=crop&w=1200&q=80" alt="Баштові крани над будівництвом"></div>
+      <div class="sector__body"><h3 data-i18n="sec.c">Будівництво й ремонт</h3><p data-i18n="sec.cp">Школи, лікарні, житло, мережі. CPV 45000000.</p></div>
+    </article>
+    <article class="sector">
+      <div class="live-photo" data-parallax><img loading="lazy" src="https://images.unsplash.com/photo-1615209853186-e4bd66602508?auto=format&fit=crop&w=1200&q=80" alt="Вітрова турбіна в ранковому тумані"></div>
+      <div class="sector__body"><h3 data-i18n="sec.e">Енергетика</h3><p data-i18n="sec.ep">Генерація, мережі, енергоефективність. CPV 09300000.</p></div>
+    </article>
+    <article class="sector">
+      <div class="live-photo" data-parallax><img loading="lazy" src="https://images.unsplash.com/photo-1529926691761-20fb82067c71?auto=format&fit=crop&w=1200&q=80" alt="Підвісний міст над водою"></div>
+      <div class="sector__body"><h3 data-i18n="sec.i">Інфраструктура</h3><p data-i18n="sec.ip">Мости, дороги, водоканали. CPV 45221000.</p></div>
+    </article>
+    <article class="sector sector--wide">
+      <div class="live-photo" data-parallax><img loading="lazy" src="https://images.unsplash.com/photo-1573164574572-cb89e39749b4?auto=format&fit=crop&w=1400&q=80" alt="Команда працює за столом з ноутбуками"></div>
+      <div class="sector__body"><h3 data-i18n="sec.t">IT, консалтинг і послуги</h3><p data-i18n="sec.tp">Розробка, кібербезпека, аудит, навчання. CPV 72000000.</p></div>
+    </article>
+  </div>
+</section>
+
+<!-- RECONSTRUCTION -->
+<section class="rebuild" aria-labelledby="rebuild-title">
+  <div class="live-photo live-photo--bleed" data-parallax><img loading="lazy" src="https://images.unsplash.com/photo-1508791290064-c27cc1ef7a9a?auto=format&fit=crop&w=2000&q=80" alt="Вітрові турбіни в зеленому полі"></div>
+  <div class="rebuild__veil"></div>
+  <div class="wrap rebuild__inner">
+    <h2 id="rebuild-title" class="h2 h2--light" data-i18n="rebuild.title">Відбудова України — це тендери, які вже публікуються</h2>
+    <p class="body-l body-l--light" data-i18n="rebuild.p">Для міжнародних компаній Tendera — провідник у Prozorro і донорських процедурах: Світовий банк, ЄБРР, ПРООН. Для українських — вихід на тендери ЄС. Партнерів для консорціуму можна знайти на платформі.</p>
+    <div class="rebuild__actions">
+      <a class="btn btn--brass btn--lg" href="#contact" data-i18n="rebuild.cta">Обговорити Enterprise</a>
+      <a class="btn btn--glass btn--lg" href="app/#/tenders" data-i18n="rebuild.cta2">Переглянути тендери в демо</a>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST -->
+<section class="trust" aria-labelledby="trust-title">
+  <div class="wrap trust__grid">
+    <h2 id="trust-title" class="h2" data-i18n="trust.title">Ваші документи, ціни й стратегія залишаються вашими</h2>
+    <dl class="trust__list">
+      <div><dt data-i18n="trust.1t">Дані в ЄС</dt><dd data-i18n="trust.1">База, файли й обробка — у європейському регіоні. Договір про обробку даних для кожного клієнта.</dd></div>
+      <div><dt data-i18n="trust.2t">Без навчання на ваших даних</dt><dd data-i18n="trust.2">Документи компанії не використовуються для навчання моделей і ніколи не потрапляють у відповіді іншим клієнтам.</dd></div>
+      <div><dt data-i18n="trust.3t">Ізоляція і шифрування</dt><dd data-i18n="trust.3">Окреме сховище для кожної компанії, шифрування під час зберігання і передачі, журнал дій.</dd></div>
+      <div><dt data-i18n="trust.4t">Людина приймає рішення</dt><dd data-i18n="trust.4">AI готує і перевіряє, але подає заявку і підписує КЕП завжди ваша команда.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing" aria-labelledby="pricing-title">
+  <div class="wrap">
+    <div class="pricing__head">
+      <h2 id="pricing-title" class="h2 h2--light" data-i18n="pricing.title">Один виграний тендер окупає роки підписки</h2>
+      <div class="billing" role="group" aria-label="Період оплати">
+        <button type="button" data-billing="month" aria-pressed="true" data-i18n="pricing.m">Щомісяця</button>
+        <button type="button" data-billing="year" aria-pressed="false"><span data-i18n="pricing.y">Щороку</span> <em>−20%</em></button>
+      </div>
+    </div>
+    <div class="plans">
+      <article class="plan">
+        <h3>Start</h3>
+        <p class="plan__for" data-i18n="plan.s.for">Для малих компаній</p>
+        <p class="plan__price"><b class="num" data-m="49" data-y="39">€49</b><span data-i18n="plan.per">/ міс</span></p>
+        <ul>
+          <li data-i18n="plan.s.1">1 країна, необмежена стрічка</li>
+          <li data-i18n="plan.s.2">AI-брифи і вердикт подаватись чи ні</li>
+          <li data-i18n="plan.s.3">Чат з документацією, 50 запитів</li>
+          <li data-i18n="plan.s.4">Дайджест у Telegram, 2 користувачі</li>
+        </ul>
+        <a class="btn btn--glass" href="app/?onboard=1&plan=start" data-i18n="plan.try">Почати тріал</a>
+      </article>
+      <article class="plan plan--featured">
+        <p class="plan__badge" data-i18n="plan.pop">Найчастіший вибір</p>
+        <h3>Pro</h3>
+        <p class="plan__for" data-i18n="plan.p.for">Для тих, хто подається щомісяця</p>
+        <p class="plan__price"><b class="num" data-m="149" data-y="119">€149</b><span data-i18n="plan.per">/ міс</span></p>
+        <ul>
+          <li data-i18n="plan.p.1">Усі країни і донорські програми</li>
+          <li data-i18n="plan.p.2">Аналітика переможців і цін</li>
+          <li data-i18n="plan.p.3">Pipeline і бібліотека документів</li>
+          <li data-i18n="plan.p.4">AI-чернетки заявок, 20 на місяць</li>
+          <li data-i18n="plan.p.5">5 користувачів</li>
+        </ul>
+        <a class="btn btn--primary" href="app/?onboard=1&plan=pro" data-i18n="plan.try">Почати тріал</a>
+      </article>
+      <article class="plan">
+        <h3>Business</h3>
+        <p class="plan__for" data-i18n="plan.b.for">Для bid-команд і консультантів</p>
+        <p class="plan__price"><b class="num" data-m="399" data-y="319">€399</b><span data-i18n="plan.per">/ міс</span></p>
+        <ul>
+          <li data-i18n="plan.b.1">Необмежені чернетки</li>
+          <li data-i18n="plan.b.2">Перевірка відповідності перед подачею</li>
+          <li data-i18n="plan.b.3">API та інтеграції з CRM</li>
+          <li data-i18n="plan.b.4">15 користувачів, профілі клієнтів</li>
+        </ul>
+        <a class="btn btn--glass" href="app/?onboard=1&plan=business" data-i18n="plan.try">Почати тріал</a>
+      </article>
+    </div>
+    <div class="enterprise" id="contact">
+      <div>
+        <h3 data-i18n="ent.t">Enterprise</h3>
+        <p data-i18n="ent.p">SSO, SLA, виділений менеджер, власні джерела даних і навчання команди. Для великих компаній і міжнародних гравців на ринку відбудови. Від €1 500 на місяць.</p>
+      </div>
+      <a class="btn btn--brass btn--lg" id="contactBtn" href="mailto:" data-i18n="ent.cta">Записатися на демо</a>
+    </div>
+    <p class="pricing__fine" data-i18n="pricing.fine">Ціни без ПДВ. Для України доступна оплата в гривнях.</p>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq" aria-labelledby="faq-title">
+  <div class="wrap faq__grid">
+    <h2 id="faq-title" class="h2" data-i18n="faq.title">Питання, які нам ставлять найчастіше</h2>
+    <div class="faq__list">
+      <details><summary data-i18n="faq.q1">Звідки ви берете тендери?</summary><p data-i18n="faq.a1">Лише з офіційних відкритих джерел: Prozorro, TED (тендери ЄС), національні портали та донорські програми. Ми зберігаємо посилання на оригінал кожного оголошення.</p></details>
+      <details><summary data-i18n="faq.q2">Чи можна довіряти AI-брифу?</summary><p data-i18n="faq.a2">Кожна вимога має посилання на сторінку і пункт документації, тож її можна перевірити за секунди. Критичні пункти позначені для ручної перевірки.</p></details>
+      <details><summary data-i18n="faq.q3">Чи подаєте ви заявку замість нас?</summary><p data-i18n="faq.a3">Ні. Ми готуємо пакет документів і чернетки, а подання з КЕП на майданчику завжди робить ваша команда.</p></details>
+      <details><summary data-i18n="faq.q4">Якими мовами працює Tendera?</summary><p data-i18n="faq.a4">Інтерфейс українською, англійською та польською. Тендери будь-якою мовою ЄС перекладаються мовою вашої команди.</p></details>
+      <details><summary data-i18n="faq.q5">Скільки часу займає старт?</summary><p data-i18n="faq.a5">Близько трьох хвилин: введіть код компанії, підтвердьте профіль, і перший відбір тендерів буде готовий одразу.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final" aria-labelledby="final-title">
+  <div class="live-photo live-photo--bleed" data-parallax><img loading="lazy" src="https://images.unsplash.com/photo-1577450775949-58ec8d02cad9?auto=format&fit=crop&w=2000&q=80" alt="Нічне місто з висоти"></div>
+  <div class="final__veil"></div>
+  <div class="wrap final__inner">
+    <h2 id="final-title" class="final__title"><span data-i18n="final.t1">Поки ви читаєте це,</span> <span class="serif" data-i18n="final.t2">хтось публікує тендер для вас.</span></h2>
+    <form class="finder finder--center" action="app/" method="get">
+      <input type="hidden" name="onboard" value="1">
+      <label class="sr-only" for="company2" data-i18n="hero.label">Код компанії або сайт</label>
+      <input id="company2" name="company" class="finder__input" placeholder="ЄДРПОУ, NIP, VAT або сайт компанії" data-i18n-ph="hero.ph">
+      <button class="btn btn--primary btn--lg" type="submit" data-i18n="hero.btn">Знайти мої тендери</button>
+    </form>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer__grid">
+    <div class="footer__brand">
+      <img src="brand/logo.svg" height="36" alt="Tendera">
+      <p data-i18n="footer.p">AI-платформа для державних і донорських тендерів у Європі.</p>
+    </div>
+    <nav class="footer__nav" aria-label="Нижня навігація">
+      <a href="app/" data-i18n="footer.app">Демо застосунку</a>
+      <a href="brand/" data-i18n="footer.brand">Бренд-кит</a>
+      <a href="#pricing" data-i18n="nav.pricing">Тарифи</a>
+      <a href="#faq" data-i18n="nav.faq">Питання</a>
+    </nav>
+    <p class="footer__credits"><span data-i18n="footer.photos">Фото:</span> Enes Gundogdu, Danist Soh, dominik hofbauer, Vitaly Gariev, Scott Graham, Sander Weeteling, Wes Hicks, Christina @ wocintechchat, American Public Power Association — <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a>. <span data-i18n="footer.map">Карта: Natural Earth.</span></p>
+    <p class="footer__copy">© 2026 Tendera</p>
+  </div>
+</footer>
+
+<script src="assets/js/europe.js"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/landing.js"></script>
+</body>
+</html>

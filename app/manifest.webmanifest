@@ -1,0 +1,13 @@
+{
+  "name": "Tendera",
+  "short_name": "Tendera",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0B1A26",
+  "theme_color": "#0B1A26",
+  "icons": [
+    { "src": "../brand/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "../brand/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "../brand/avatar.png", "sizes": "1024x1024", "type": "image/png" }
+  ]
+}

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tendera — бренд-кит</title>
+<meta name="description" content="Логотип, аватарка, банер і кольори Tendera.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/css/fonts.css">
+<style>
+  :root{--ink:#0B1A26;--ink-2:#11283A;--paper:#EDF0EA;--mist:#93A3AE;--verd:#3FA394;--verd-hi:#6FD1BF;--brass:#C8A46A;--line:rgba(205,222,219,.12)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--paper);font:400 16px/1.6 "Geist",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:56px 24px 96px}
+  header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:56px}
+  header a{color:var(--mist);text-decoration:none}
+  header a:hover{color:var(--paper)}
+  h1{margin:0 0 8px;font-weight:500;font-size:clamp(36px,5vw,60px);letter-spacing:-.04em;line-height:1.05}
+  h1 em{font-family:"Cormorant",Georgia,serif;font-weight:500;color:#E2C38E}
+  .lead{margin:0 0 56px;color:#A9B7BF;max-width:40em}
+  h2{margin:64px 0 16px;font-weight:500;font-size:22px;letter-spacing:-.02em}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+  .tile{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--ink-2)}
+  .tile__art{display:grid;place-items:center;min-height:220px;padding:28px}
+  .tile__art--paper{background:var(--paper)}
+  .tile__art img{max-width:100%;height:auto}
+  .tile__meta{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-top:1px solid var(--line);font-size:14px}
+  .tile__meta span{color:var(--mist)}
+  .tile__meta a{color:var(--verd-hi);text-decoration:none;white-space:nowrap}
+  .wide{grid-column:1/-1}
+  .wide .tile__art{padding:0}
+  .wide img{width:100%;height:auto}
+  .swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+  .sw{border-radius:14px;padding:84px 14px 14px;border:1px solid var(--line);font-size:14px}
+  .sw b{display:block;font-weight:500}
+  .type{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .type .tile{padding:24px}
+  .sample-sans{font-size:44px;font-weight:500;letter-spacing:-.04em;line-height:1.05}
+  .sample-serif{font-family:"Cormorant",Georgia,serif;font-style:italic;font-size:52px;line-height:1;color:#E2C38E}
+  .note{color:var(--mist);font-size:14px;margin-top:10px}
+  @media (max-width:700px){.type{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><img src="logo.svg" height="36" alt="Tendera"><a href="../">← На сайт</a></header>
+  <h1>Бренд-кит <em>Tendera</em></h1>
+  <p class="lead">Знак — радарна шкала, що знаходить тендер: промінь обертається, поділки підсвічуються, латунна точка — знайдена можливість. Усі SVG-версії анімовані й поважають налаштування «зменшити рух».</p>
+
+  <h2>Логотип</h2>
+  <div class="grid">
+    <div class="tile"><div class="tile__art"><img src="logo.svg" width="260" alt="Логотип Tendera, анімований"></div><div class="tile__meta"><span>Живий логотип, темний фон</span><a href="logo.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="tile__art tile__art--paper"><img src="logo-on-light.svg" width="260" alt="Логотип Tendera для світлого фону"></div><div class="tile__meta"><span>Для світлого фону</span><a href="logo-on-light.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="tile__art"><img src="mark.svg" width="120" alt="Знак Tendera, анімований"></div><div class="tile__meta"><span>Знак</span><a href="mark.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="tile__art"><img src="logo.png" width="260" alt="Логотип Tendera, PNG"></div><div class="tile__meta"><span>Статичний PNG</span><a href="logo.png" download>PNG</a></div></div>
+  </div>
+
+  <h2>Аватарка</h2>
+  <div class="grid">
+    <div class="tile"><div class="tile__art"><img src="avatar.svg" width="200" style="border-radius:50%" alt="Аватарка Tendera, анімована"></div><div class="tile__meta"><span>Жива, 1024 × 1024</span><a href="avatar.svg" download>SVG</a></div></div>
+    <div class="tile"><div class="tile__art"><img src="avatar.png" width="200" style="border-radius:28px" alt="Аватарка Tendera, PNG"></div><div class="tile__meta"><span>Для соцмереж</span><a href="avatar.png" download>PNG</a></div></div>
+    <div class="tile"><div class="tile__art"><img src="favicon.svg" width="96" alt="Іконка Tendera"></div><div class="tile__meta"><span>Іконка застосунку</span><a href="apple-touch-icon.png" download>PNG 180</a></div></div>
+  </div>
+
+  <h2>Банер</h2>
+  <div class="grid">
+    <div class="tile wide"><div class="tile__art"><img src="banner.svg" alt="Банер Tendera, анімований"></div><div class="tile__meta"><span>Живий банер, 1584 × 396 (LinkedIn, X)</span><span><a href="banner.svg" download>SVG</a> · <a href="banner.png" download>PNG 2×</a></span></div></div>
+    <div class="tile wide"><div class="tile__art"><img src="og.png" alt="Зображення для поширення посилань"></div><div class="tile__meta"><span>Обкладинка для посилань, 1280 × 640</span><a href="og.png" download>PNG</a></div></div>
+  </div>
+
+  <h2>Кольори</h2>
+  <div class="swatches">
+    <div class="sw" style="background:#0B1A26"><b>Ink</b>#0B1A26</div>
+    <div class="sw" style="background:#11283A"><b>Deep sea</b>#11283A</div>
+    <div class="sw" style="background:#EDF0EA;color:#0B1A26"><b>Paper</b>#EDF0EA</div>
+    <div class="sw" style="background:#3FA394;color:#04130F"><b>Verdigris</b>#3FA394</div>
+    <div class="sw" style="background:#6FD1BF;color:#04130F"><b>Signal</b>#6FD1BF</div>
+    <div class="sw" style="background:#C8A46A;color:#1C1406"><b>Brass</b>#C8A46A</div>
+  </div>
+
+  <h2>Шрифти</h2>
+  <div class="type">
+    <div class="tile"><div class="sample-sans">Державні тендери Європи</div><p class="note">Geist — інтерфейс і заголовки. SIL Open Font License.</p></div>
+    <div class="tile"><div class="sample-serif">прочитані за вас.</div><p class="note">Cormorant Garamond Italic — акценти й великі цифри. SIL Open Font License.</p></div>
+  </div>
+</div>
+</body>
+</html>
