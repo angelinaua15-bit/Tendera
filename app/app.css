@@ -423,3 +423,12 @@ kbd{font:500 11px var(--sans);padding:2px 6px;border-radius:5px;border:1px solid
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-duration:.001ms!important}}
 .chart rect,.chart text{stroke:none}
+
+button.avatar{border:0;cursor:pointer}
+.pop__me{padding:8px 10px 10px;border-bottom:1px solid var(--line);margin-bottom:6px;display:grid}
+.pop__me b{font-weight:500}
+.pop__me span{font-size:13px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis}
+.pop__btn{width:100%;border:0;background:none;text-align:left;cursor:pointer;color:inherit;font:inherit}
+.pop__btn b{color:var(--bad)}
+body.booting .view{opacity:0}
+body.booting::after{content:"";position:fixed;left:50%;top:50%;width:28px;height:28px;margin:-14px;border-radius:50%;border:2px solid var(--line-2);border-top-color:var(--accent);animation:spin .8s linear infinite}

@@ -14,14 +14,14 @@
 <link rel="stylesheet" href="../assets/css/fonts.css">
 <link rel="stylesheet" href="app.css">
 </head>
-<body>
+<body class="booting">
 <a class="skip" href="#view">Перейти до змісту</a>
 <div class="shell">
   <aside class="side" id="side" aria-label="Бічна панель">
     <a class="side__brand" href="#/" aria-label="Tendera — огляд"><img src="../brand/logo.svg" height="30" alt="Tendera"></a>
     <button class="org" type="button" id="orgBtn" aria-label="Компанія">
-      <span class="org__logo">ГІ</span>
-      <span class="org__txt"><b id="orgName">ТОВ «Галбуд-Інжиніринг»</b><small>Pro · тріал, 12 днів</small></span>
+      <span class="org__logo" id="orgLogo">ГІ</span>
+      <span class="org__txt"><b id="orgName">ТОВ «Галбуд-Інжиніринг»</b><small id="orgPlan">Pro · тріал, 12 днів</small></span>
     </button>
     <nav class="side__nav" aria-label="Розділи">
       <a href="#/" data-route="overview"><svg viewBox="0 0 24 24"><path d="M4 13h6V4H4zM14 20h6v-9h-6zM4 20h6v-4H4zM14 4v4h6V4z"/></svg>Огляд</a>
@@ -51,7 +51,13 @@
         <span class="demo-pill" title="Усі дані в демо ілюстративні">Демо-дані</span>
         <button class="icon-btn" id="themeBtn" type="button" aria-label="Перемкнути тему"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
         <button class="icon-btn" id="bellBtn" type="button" aria-label="Сповіщення" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg><i class="dot"></i></button>
-        <div class="avatar" title="Олег Коваль">ОК</div>
+        <button class="avatar" id="meBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="mePop" title="Олег Коваль">ОК</button>
+      </div>
+      <div class="pop" id="mePop" hidden>
+        <div class="pop__me"><b id="meName">Олег Коваль</b><span id="meMail">Демо-користувач</span></div>
+        <a href="#/settings?tab=company" class="pop__item"><b>Профіль компанії</b></a>
+        <a href="#/settings?tab=team" class="pop__item"><b>Команда</b></a>
+        <button type="button" class="pop__item pop__btn" id="signOut"><b>Вийти</b></button>
       </div>
       <div class="pop" id="bellPop" hidden>
         <p class="pop__title">Сповіщення</p>
@@ -75,6 +81,9 @@
 <div class="onb" id="onb" hidden role="dialog" aria-modal="true" aria-labelledby="onbTitle"></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
+<script src="../assets/vendor/supabase.js"></script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/auth-client.js"></script>
 <script src="../assets/js/europe.js"></script>
 <script src="data.js"></script>
 <script src="app.js"></script>

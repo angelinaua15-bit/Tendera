@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Реєстрація компанії — Tendera</title>
+<meta name="description" content="Зареєструйте компанію в Tendera: 14 днів безкоштовно, без картки.">
+<meta name="theme-color" content="#0B1A26">
+<meta name="robots" content="noindex">
+<link rel="icon" href="../brand/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../brand/apple-touch-icon.png">
+<link rel="preconnect" href="https://images.unsplash.com">
+<link rel="stylesheet" href="../assets/css/fonts.css">
+<link rel="stylesheet" href="auth.css">
+</head>
+<body>
+<div class="auth">
+  <aside class="auth__side" aria-hidden="true">
+    <div class="auth__photo"><img src="https://images.unsplash.com/photo-1758691737182-d42aefd6dee8?auto=format&fit=crop&w=1400&q=80" alt=""></div>
+    <div class="auth__veil"></div>
+    <a class="auth__brand" href="../" tabindex="-1"><img src="../brand/logo.svg" height="34" alt="Tendera"></a>
+    <div class="auth__pitch">
+      <p class="auth__quote">Тендерний відділ, який працює, поки ви спите.</p>
+      <ul class="auth__facts">
+        <li><b>Щоранку о 8:00</b> — відбір тендерів з Prozorro, TED і донорських програм під ваш профіль.</li>
+        <li><b>AI-бриф за 30 секунд</b> — вимоги, ризики і вердикт з посиланням на сторінку документації.</li>
+        <li><b>Заявка на 80% готова</b> — чекліст, документи з бібліотеки і чернетки текстів.</li>
+      </ul>
+      <p class="auth__trust">Дані зберігаються в ЄС. Документи компанії не використовуються для навчання моделей.</p>
+    </div>
+  </aside>
+
+  <main class="auth__main" id="main">
+    <header class="auth__top">
+      <a class="auth__brand-m" href="../"><img src="../brand/logo.svg" height="28" alt="Tendera"></a>
+      <nav class="auth__switch" id="switch"></nav>
+    </header>
+
+    <div class="auth__card" id="card" aria-live="polite"></div>
+
+    <footer class="auth__foot">
+      <a href="../legal/privacy.html">Конфіденційність</a>
+      <a href="../legal/terms.html">Умови</a>
+      <a href="../app/?demo=1">Демо без реєстрації</a>
+    </footer>
+  </main>
+</div>
+
+<script src="../assets/vendor/supabase.js"></script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/auth-client.js"></script>
+<script src="auth.js"></script>
+</body>
+</html>

@@ -13,7 +13,7 @@
 
   /* ---------- i18n (UA default, EN) ---------- */
   const EN = {
-    skip: 'Skip to content', 'nav.how': 'How it works', 'nav.ai': 'AI brief', 'nav.sectors': 'Industries', 'nav.pricing': 'Pricing', 'nav.faq': 'FAQ', 'nav.login': 'Sign in', 'nav.cta': 'Open demo',
+    skip: 'Skip to content', 'nav.how': 'How it works', 'nav.ai': 'AI brief', 'nav.sectors': 'Industries', 'nav.pricing': 'Pricing', 'nav.faq': 'FAQ', 'nav.login': 'Sign in', 'nav.cta': 'Register your company', 'nav.demo': 'App demo', 'hero.demo': 'Or explore the demo', 'footer.privacy': 'Privacy', 'footer.terms': 'Terms',
     'hero.status': 'Early access for companies in Ukraine, Poland and the EU',
     'hero.t1': 'Europe’s public tenders,', 'hero.t2': 'read for you.',
     'hero.lead': 'Every morning Tendera finds the procurements your company can actually win, explains the requirements in 30 seconds and prepares the bid. No bid department, no 300-page documents.',

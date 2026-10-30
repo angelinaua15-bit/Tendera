@@ -41,7 +41,21 @@
     onboarded: store.get('onboarded', false),
     view: store.get('view', 'cards')
   };
-  const save = k => store.set(k, S[k]);
+  /* ---------- real account (Supabase) ---------- */
+  const SYNC_KEYS = ['pipeline', 'dismissed', 'saved', 'checks', 'drafts'];
+  let ACC = null; // { client, uid, email, profile, org, role, invites }
+  let syncTimer = 0;
+  const save = k => { if (ACC && SYNC_KEYS.includes(k)) scheduleSync(); else store.set(k, S[k]); };
+  function scheduleSync() {
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(async () => {
+      const data = Object.fromEntries(SYNC_KEYS.map(k => [k, S[k]]));
+      const { error } = await ACC.client.from('org_state').upsert({ org_id: ACC.org.id, data, updated_by: ACC.uid });
+      if (error) toast('Не вдалося зберегти зміни. Перевірте з’єднання і повторіть дію.');
+    }, 700);
+  }
+  const initials = n => (n || '?').trim().split(/[\s-]+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?';
+  const ROLE_UA = { owner: 'Власник', admin: 'Адміністратор', member: 'Учасник' };
   document.documentElement.dataset.theme = S.theme;
 
   /* ---------- small components ---------- */
@@ -536,19 +550,20 @@
     const C = D.COMPANY;
     const bodies = {
       company: `<form class="form" id="coForm"><div class="field"><label for="coName">Назва</label><input id="coName" value="${esc(C.name)}"></div>
-        <div class="field"><label for="coCode">Код ЄДРПОУ</label><input id="coCode" value="${C.code}" inputmode="numeric"></div>
+        <div class="field"><label for="coCode">Реєстраційний код</label><input id="coCode" value="${esc(C.code)}"></div>
+        <div class="field"><label for="coSite">Сайт</label><input id="coSite" value="${esc(C.website || '')}" placeholder="https://"></div>
         <div class="field"><label>Коди CPV</label><div class="tags">${C.cpv.map(c => `<span class="chip chip--good">${esc(c)}</span>`).join('')}<button type="button" class="fchip" id="addCpv">+ Додати</button></div></div>
         <div class="field"><label>Регіони</label><div class="tags">${C.regions.map(r => `<span class="chip">${esc(r)}</span>`).join('')}</div></div>
         <div class="field"><label for="coMin">Бюджет тендерів, € від — до</label><div style="display:flex;gap:8px"><input id="coMin" value="${nf.format(C.budget[0])}"><input aria-label="до" value="${nf.format(C.budget[1])}"></div></div>
         <div class="field"><label for="coEx">Виключити слова</label><textarea id="coEx" placeholder="Наприклад: харчування, паливо"></textarea></div>
         <div><button class="btn btn--primary" type="submit">Зберегти профіль</button></div></form>`,
-      team: `<div class="form"><div class="card" style="padding:8px 16px">${D.TEAM.concat(S.invites.map(e => ({ name: e, role: 'Запрошення надіслано', initials: e[0].toUpperCase() }))).map(m => `<div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)"><span class="avatar avatar--sm">${esc(m.initials)}</span><div style="flex:1">${esc(m.name)}<small style="display:block;color:var(--text-3)">${esc(m.role)}</small></div></div>`).join('')}</div>
-        <form id="invForm" style="display:flex;gap:8px"><label class="sr-only" for="invEmail">Email</label><input class="select" style="flex:1;height:42px;border-radius:10px" id="invEmail" type="email" required placeholder="email колеги"><button class="btn btn--primary" type="submit">Запросити</button></form><p style="margin:0;font-size:13px;color:var(--text-3)">Тариф Pro: до 5 користувачів. У демо запрошення не надсилаються.</p></div>`,
+      team: `<div class="form"><div class="card" style="padding:8px 16px">${D.TEAM.concat((ACC ? ACC.invites : S.invites).map(e => ({ name: e, role: ACC ? 'Очікує реєстрації' : 'Запрошення надіслано', initials: e[0].toUpperCase() }))).map(m => `<div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)"><span class="avatar avatar--sm">${esc(m.initials)}</span><div style="flex:1">${esc(m.name)}<small style="display:block;color:var(--text-3)">${esc(m.role)}</small></div></div>`).join('')}</div>
+        <form id="invForm" style="display:flex;gap:8px"><label class="sr-only" for="invEmail">Email</label><input class="select" style="flex:1;height:42px;border-radius:10px" id="invEmail" type="email" required placeholder="email колеги"><button class="btn btn--primary" type="submit">Запросити</button></form><p style="margin:0;font-size:13px;color:var(--text-3)">${ACC ? 'Попросіть колегу зареєструватися з цим email — він автоматично приєднається до вашої компанії.' : 'Тариф Pro: до 5 користувачів. У демо запрошення не надсилаються.'}</p></div>`,
       plan: `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">${[['Start', 49, 'Для малих компаній'], ['Pro', 149, 'Ваш тариф · тріал 12 днів'], ['Business', 399, 'Для bid-команд']].map(([n, p, d]) => `<div class="card" style="${n === 'Pro' ? 'border-color:var(--accent)' : ''}"><h3 style="font-size:18px">${n}</h3><p style="margin:4px 0 14px;color:var(--text-3);font-size:13px">${d}</p><b class="num" style="font-size:32px;font-weight:500;letter-spacing:-.03em">€${p}</b><span style="color:var(--text-3)"> / міс</span><div style="margin-top:14px">${n === 'Pro' ? '<span class="chip chip--good">Поточний</span>' : `<button class="btn btn--ghost btn--sm" type="button" data-plan="${n}">Обрати</button>`}</div></div>`).join('')}</div>
         <p style="color:var(--text-3);font-size:13px">Оплата карткою або SEPA, рахунок для юросіб. Для України — у гривнях.</p>`,
       integrations: `<div class="integr">${[['TG', 'Telegram', 'Ранковий дайджест і нагадування про дедлайни', 'tg'], ['@', 'Email', 'Дайджест на пошту о 8:00', 'mail'], ['HS', 'HubSpot', 'Угоди з pipeline у CRM', 'hs'], ['GD', 'Google Drive', 'Імпорт документів у бібліотеку', 'gd'], ['31', 'Календар', 'Дедлайни у Google / Outlook', 'cal'], ['{}', 'API', 'Доступ для власних систем (Business)', 'api']].map(([ic, n, d, k]) => `<div class="card"><span class="ic">${ic}</span><b style="font-weight:500">${n}</b><p style="margin:0;color:var(--text-2);font-size:14px">${d}</p><button class="btn btn--ghost btn--sm" type="button" data-int="${k}" style="justify-self:start">${k === 'mail' ? 'Підключено' : 'Підключити'}</button></div>`).join('')}</div>`,
       look: `<div class="form"><div class="field"><label>Тема</label><div class="seg" role="group" aria-label="Тема"><button type="button" data-theme-set="dark" aria-pressed="${S.theme === 'dark'}">Темна</button><button type="button" data-theme-set="light" aria-pressed="${S.theme === 'light'}">Світла</button></div></div>
-        <div class="field"><label>Демо</label><div><button class="btn btn--ghost" type="button" id="resetDemo">Скинути демо-дані</button> <button class="btn btn--ghost" type="button" id="runOnb">Пройти онбординг знову</button></div></div></div>`
+        ${ACC ? `<div class="field"><label>Акаунт</label><div style="color:var(--text-2);font-size:14px">${esc(ACC.email)} · ${ROLE_UA[ACC.role] || ''}</div><div><button class="btn btn--danger" type="button" id="signOut2">Вийти з акаунта</button></div></div>` : `<div class="field"><label>Демо</label><div><button class="btn btn--ghost" type="button" id="resetDemo">Скинути демо-дані</button> <button class="btn btn--ghost" type="button" id="runOnb">Пройти онбординг знову</button></div></div>`}</div>`
     };
     return `<div class="ph"><div><h1>Налаштування</h1></div></div>
       <div class="tabs" role="tablist">${tabs.map(([k, n]) => `<button type="button" role="tab" data-stab="${k}" aria-selected="${k === tab}">${n}</button>`).join('')}</div>
@@ -557,9 +572,31 @@
   settings.title = () => 'Налаштування';
   settings.mount = view => {
     $$('[data-stab]', view).forEach(b => b.onclick = () => { location.hash = '#/settings?tab=' + b.dataset.stab; });
-    $('#coForm', view)?.addEventListener('submit', e => { e.preventDefault(); D.COMPANY.name = $('#coName', view).value; $('#orgName').textContent = D.COMPANY.name; toast('Профіль збережено. Відбір тендерів оновиться за кілька хвилин.'); });
+    $('#coForm', view)?.addEventListener('submit', async e => {
+      e.preventDefault();
+      const name = $('#coName', view).value.trim(), code = $('#coCode', view).value.trim(), website = $('#coSite', view).value.trim();
+      if (name.length < 2) { toast('Вкажіть назву компанії'); return; }
+      if (ACC) {
+        if (ACC.role === 'member') { toast('Змінювати профіль компанії можуть власник або адміністратор.'); return; }
+        const { error } = await ACC.client.from('organizations').update({ name, reg_code: code || null, website: website || null }).eq('id', ACC.org.id);
+        if (error) { toast('Не вдалося зберегти. Спробуйте ще раз.'); return; }
+        Object.assign(ACC.org, { name, reg_code: code, website });
+      }
+      Object.assign(D.COMPANY, { name, code, website }); paintAccount();
+      toast('Профіль збережено. Відбір тендерів оновиться за кілька хвилин.');
+    });
     $('#addCpv', view)?.addEventListener('click', () => toast('Почніть вводити назву робіт — AI підбере коди CPV. (У демо недоступно)'));
-    $('#invForm', view)?.addEventListener('submit', e => { e.preventDefault(); S.invites.push($('#invEmail', view).value); save('invites'); render(); toast('Запрошення додано'); });
+    $('#invForm', view)?.addEventListener('submit', async e => {
+      e.preventDefault(); const email = $('#invEmail', view).value.trim().toLowerCase();
+      if (ACC) {
+        if (ACC.role === 'member') { toast('Запрошувати можуть власник або адміністратор.'); return; }
+        const { error } = await ACC.client.from('invitations').insert({ org_id: ACC.org.id, email, invited_by: ACC.uid });
+        if (error) { toast(/duplicate|unique/i.test(error.message) ? 'Цю людину вже запрошено.' : 'Не вдалося додати запрошення.'); return; }
+        ACC.invites.push(email);
+      } else { S.invites.push(email); save('invites'); }
+      render(); toast('Запрошення додано');
+    });
+    $('#signOut2', view)?.addEventListener('click', signOut);
     $$('[data-plan]', view).forEach(b => b.onclick = () => toast(`Тариф ${b.dataset.plan}: у демо оплата не підключена.`));
     $$('[data-int]', view).forEach(b => b.onclick = () => { if (b.dataset.int === 'tg') { b.textContent = 'Очікує підтвердження'; toast('У робочій версії тут з’явиться QR-код для Telegram-бота Tendera.'); } else toast('Інтеграція буде доступна в робочій версії.'); });
     $$('[data-theme-set]', view).forEach(b => b.onclick = () => { setTheme(b.dataset.themeSet); render(); });
@@ -575,6 +612,27 @@
   bell.onclick = e => { e.stopPropagation(); pop.hidden = !pop.hidden; bell.setAttribute('aria-expanded', String(!pop.hidden)); $('.dot', bell)?.remove(); };
   document.addEventListener('click', e => { if (!pop.hidden && !pop.contains(e.target)) { pop.hidden = true; bell.setAttribute('aria-expanded', 'false'); } });
   $('#orgBtn').onclick = () => { location.hash = '#/settings?tab=company'; };
+  const me = $('#meBtn'), mePop = $('#mePop');
+  me.onclick = e => { e.stopPropagation(); mePop.hidden = !mePop.hidden; me.setAttribute('aria-expanded', String(!mePop.hidden)); };
+  document.addEventListener('click', e => { if (!mePop.hidden && !mePop.contains(e.target)) { mePop.hidden = true; me.setAttribute('aria-expanded', 'false'); } });
+  $('#signOut').onclick = signOut;
+  async function signOut() {
+    if (ACC) { await ACC.client.auth.signOut(); location.replace(window.tenderaAuth.siteRoot() + 'auth/?mode=login'); }
+    else location.href = '../auth/?mode=signup';
+  }
+  function paintAccount() {
+    const C = D.COMPANY;
+    $('#orgName').textContent = C.name;
+    $('#orgLogo').textContent = initials(C.name.replace(/^(ТОВ|ПП|ФОП|ПрАТ|АТ|Sp\. z o\.o\.|GmbH)\s*/i, '').replace(/[«»"']/g, ''));
+    $('#meName').textContent = D.USER.name; $('#meMail').textContent = ACC ? ACC.email : 'Демо-користувач';
+    me.textContent = D.USER.initials; me.title = D.USER.name;
+    if (ACC) {
+      const days = Math.max(0, Math.ceil((new Date(ACC.org.trial_ends_at) - new Date()) / 864e5));
+      $('#orgPlan').textContent = ACC.org.plan === 'trial' ? `Тріал Pro · ${days} ${plural(days, 'день', 'дні', 'днів')}` : `Тариф ${ACC.org.plan[0].toUpperCase() + ACC.org.plan.slice(1)}`;
+      const pill = $('.demo-pill'); pill.textContent = 'Демо-тендери'; pill.title = 'Стрічка тендерів поки працює на демонстраційних даних';
+      $('#signOut b').textContent = 'Вийти';
+    } else { $('#signOut b').textContent = 'Зареєструвати компанію'; $('#signOut b').style.color = 'var(--accent)'; }
+  }
   $('#newCount').textContent = D.TENDERS.filter(t => t.published <= 12).length;
 
   /* ---------- command palette ---------- */
@@ -644,7 +702,69 @@
 
   /* ---------- boot ---------- */
   const qs = new URLSearchParams(location.search);
-  render();
-  if (qs.has('onboard') || !S.onboarded) openOnboarding(qs.get('company') || '');
-  if (qs.toString()) history.replaceState(null, '', location.pathname + location.hash);
+  const REGION_UA = { UA: 'Україна', PL: 'Польща', EU: 'ЄС (TED)', DONOR: 'Донорські програми' };
+  async function loadAccount(A, session) {
+    const c = A.client, uid = session.user.id;
+    const [{ data: prof }, { data: mem, error: memErr }] = await Promise.all([
+      c.from('profiles').select('*').eq('id', uid).maybeSingle(),
+      c.from('organization_members').select('role, created_at, organizations(*)').eq('user_id', uid).order('created_at').limit(1)
+    ]);
+    if (memErr) throw memErr;
+    ACC = { client: c, uid, email: session.user.email, profile: prof || {}, invites: [] };
+    const name = (prof && prof.full_name) || session.user.email.split('@')[0];
+    Object.assign(D.USER, { name, initials: initials(name), role: (prof && prof.job_title) || '' });
+    if (!mem || !mem.length || !mem[0].organizations) return 'no-org';
+    ACC.org = mem[0].organizations; ACC.role = mem[0].role;
+    const o = ACC.org;
+    Object.assign(D.COMPANY, { name: o.name, code: o.reg_code || '', website: o.website || '', regions: (o.regions || []).map(r => REGION_UA[r] || r), cpv: o.industries && o.industries.length ? o.industries : D.COMPANY.cpv });
+    const [{ data: st }, { data: team }, { data: inv }] = await Promise.all([
+      c.from('org_state').select('data').eq('org_id', o.id).maybeSingle(),
+      c.from('organization_members').select('role, user_id, profiles(full_name, job_title)').eq('org_id', o.id),
+      ACC.role === 'member' ? Promise.resolve({ data: [] }) : c.from('invitations').select('email').eq('org_id', o.id)
+    ]);
+    const data = (st && st.data) || {};
+    S.pipeline = data.pipeline || {}; S.dismissed = data.dismissed || {}; S.saved = data.saved || {}; S.checks = data.checks || {}; S.drafts = data.drafts || {};
+    D.TEAM.length = 0;
+    (team || []).forEach(m => { const n = (m.profiles && m.profiles.full_name) || (m.user_id === uid ? name : 'Учасник'); D.TEAM.push({ name: n, role: (m.profiles && m.profiles.job_title) || ROLE_UA[m.role], initials: initials(n) }); });
+    ACC.invites = (inv || []).map(i => i.email);
+    Object.keys(D.OWNERS).forEach(k => delete D.OWNERS[k]);
+    return 'ok';
+  }
+  function createOrgModal(A) {
+    const box = $('#onb'); box.hidden = false;
+    box.innerHTML = `<div class="onb__box" style="grid-template-columns:1fr;max-width:520px;min-height:0"><div class="onb__body">
+      <h2 id="onbTitle">Додайте вашу компанію</h2><p>Акаунт є, але він ще не прив’язаний до компанії.</p>
+      <form class="form" id="coNew"><div class="field"><label for="nName">Назва компанії</label><input id="nName" required minlength="2" autocomplete="organization"></div>
+      <div class="field"><label for="nCountry">Країна</label><select id="nCountry"><option value="UA">Україна</option><option value="PL">Польща</option><option value="DE">Німеччина</option><option value="LT">Литва</option><option value="RO">Румунія</option><option value="XX">Інша</option></select></div>
+      <div class="field"><label for="nCode">Реєстраційний код</label><input id="nCode"></div>
+      <div class="onb__foot"><button class="btn btn--ghost" type="button" id="nOut">Вийти</button><button class="btn btn--primary btn--lg" type="submit">Створити компанію</button></div></form></div></div>`;
+    $('#nOut').onclick = signOut;
+    $('#coNew').onsubmit = async e => {
+      e.preventDefault();
+      const { error } = await A.client.rpc('create_organization', { p_name: $('#nName').value.trim(), p_country: $('#nCountry').value, p_reg_code: $('#nCode').value.trim() || null });
+      if (error) { toast('Не вдалося створити компанію. Спробуйте ще раз.'); return; }
+      location.reload();
+    };
+  }
+  async function boot() {
+    const A = window.tenderaAuth;
+    const ss = { get(k) { try { return sessionStorage.getItem(k); } catch { return null; } }, set(k, v) { try { sessionStorage.setItem(k, v); } catch { /* ignore */ } } };
+    if (qs.has('demo')) ss.set('tendera.demo', '1');
+    const session = A && A.configured ? (await A.client.auth.getSession()).data.session : null;
+    if (A && A.configured && (session || ss.get('tendera.demo') !== '1')) {
+      if (!session) { location.replace(A.siteRoot() + 'auth/?mode=login&reason=session' + (location.hash.length > 2 ? '&next=' + encodeURIComponent(location.hash) : '')); return; }
+      let res;
+      try { res = await loadAccount(A, session); }
+      catch { document.body.classList.remove('booting'); $('#view').innerHTML = '<div class="empty"><b>Не вдалося завантажити дані компанії</b>Перевірте з’єднання і оновіть сторінку.<br><br><button class="btn btn--primary" type="button" onclick="location.reload()">Оновити</button></div>'; return; }
+      A.client.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') location.replace(A.siteRoot() + 'auth/?mode=login'); });
+      paintAccount(); document.body.classList.remove('booting'); render();
+      if (res === 'no-org') { createOrgModal(A); return; }
+      if (qs.has('welcome')) toast(`Вітаємо в Tendera, ${esc(D.USER.name.split(' ')[0])}! Компанію «${esc(D.COMPANY.name)}» створено.`);
+    } else {
+      paintAccount(); document.body.classList.remove('booting'); render();
+      if (qs.has('onboard') || !S.onboarded) openOnboarding(qs.get('company') || '');
+    }
+    if (qs.toString()) history.replaceState(null, '', location.pathname + location.hash);
+  }
+  boot();
 })();

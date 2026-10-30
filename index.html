@@ -38,8 +38,8 @@
         <button type="button" data-lang="uk" aria-pressed="true">UA</button>
         <button type="button" data-lang="en" aria-pressed="false">EN</button>
       </div>
-      <a class="btn btn--ghost nav__login" href="app/" data-i18n="nav.login">Увійти</a>
-      <a class="btn btn--primary" href="app/?onboard=1" data-i18n="nav.cta">Відкрити демо</a>
+      <a class="btn btn--ghost nav__login" href="auth/?mode=login" data-i18n="nav.login">Увійти</a>
+      <a class="btn btn--primary" href="auth/?mode=signup" data-i18n="nav.cta">Зареєструвати компанію</a>
       <button class="nav__burger" type="button" aria-label="Меню" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span></button>
     </div>
   </div>
@@ -49,7 +49,9 @@
     <a href="#sectors" data-i18n="nav.sectors">Галузі</a>
     <a href="#pricing" data-i18n="nav.pricing">Тарифи</a>
     <a href="#faq" data-i18n="nav.faq">Питання</a>
-    <a href="app/" data-i18n="nav.login">Увійти</a>
+    <a href="app/?demo=1" data-i18n="nav.demo">Демо застосунку</a>
+    <a href="auth/?mode=login" data-i18n="nav.login">Увійти</a>
+    <a href="auth/?mode=signup" data-i18n="nav.cta">Зареєструвати компанію</a>
   </div>
 </header>
 
@@ -65,13 +67,13 @@
         <span class="hero__line hero__line--serif" data-i18n="hero.t2">прочитані за вас.</span>
       </h1>
       <p class="hero__lead" data-i18n="hero.lead">Tendera щоранку знаходить закупівлі, які ваша компанія реально може виграти, пояснює вимоги за 30 секунд і готує заявку. Без тендерного відділу і без сотень сторінок документації.</p>
-      <form class="finder" action="app/" method="get" id="finder">
-        <input type="hidden" name="onboard" value="1">
+      <form class="finder" action="auth/" method="get" id="finder">
+        <input type="hidden" name="mode" value="signup">
         <label class="sr-only" for="company" data-i18n="hero.label">Код компанії або сайт</label>
         <input id="company" name="company" class="finder__input" autocomplete="organization" placeholder="ЄДРПОУ, NIP, VAT або сайт компанії" data-i18n-ph="hero.ph">
         <button class="btn btn--primary btn--lg" type="submit" data-i18n="hero.btn">Знайти мої тендери</button>
       </form>
-      <p class="hero__fine" data-i18n="hero.fine">14 днів безкоштовно. Картка не потрібна.</p>
+      <p class="hero__fine"><span data-i18n="hero.fine">14 днів безкоштовно. Картка не потрібна.</span> <a href="app/?demo=1" data-i18n="hero.demo">Або подивіться демо</a></p>
     </div>
 
     <figure class="hero__stage" aria-label="Приклад AI-брифу тендера">
@@ -243,7 +245,7 @@
     <p class="body-l body-l--light" data-i18n="rebuild.p">Для міжнародних компаній Tendera — провідник у Prozorro і донорських процедурах: Світовий банк, ЄБРР, ПРООН. Для українських — вихід на тендери ЄС. Партнерів для консорціуму можна знайти на платформі.</p>
     <div class="rebuild__actions">
       <a class="btn btn--brass btn--lg" href="#contact" data-i18n="rebuild.cta">Обговорити Enterprise</a>
-      <a class="btn btn--glass btn--lg" href="app/#/tenders" data-i18n="rebuild.cta2">Переглянути тендери в демо</a>
+      <a class="btn btn--glass btn--lg" href="app/?demo=1#/tenders" data-i18n="rebuild.cta2">Переглянути тендери в демо</a>
     </div>
   </div>
 </section>
@@ -282,7 +284,7 @@
           <li data-i18n="plan.s.3">Чат з документацією, 50 запитів</li>
           <li data-i18n="plan.s.4">Дайджест у Telegram, 2 користувачі</li>
         </ul>
-        <a class="btn btn--glass" href="app/?onboard=1&plan=start" data-i18n="plan.try">Почати тріал</a>
+        <a class="btn btn--glass" href="auth/?mode=signup&plan=start" data-i18n="plan.try">Почати тріал</a>
       </article>
       <article class="plan plan--featured">
         <p class="plan__badge" data-i18n="plan.pop">Найчастіший вибір</p>
@@ -296,7 +298,7 @@
           <li data-i18n="plan.p.4">AI-чернетки заявок, 20 на місяць</li>
           <li data-i18n="plan.p.5">5 користувачів</li>
         </ul>
-        <a class="btn btn--primary" href="app/?onboard=1&plan=pro" data-i18n="plan.try">Почати тріал</a>
+        <a class="btn btn--primary" href="auth/?mode=signup&plan=pro" data-i18n="plan.try">Почати тріал</a>
       </article>
       <article class="plan">
         <h3>Business</h3>
@@ -308,7 +310,7 @@
           <li data-i18n="plan.b.3">API та інтеграції з CRM</li>
           <li data-i18n="plan.b.4">15 користувачів, профілі клієнтів</li>
         </ul>
-        <a class="btn btn--glass" href="app/?onboard=1&plan=business" data-i18n="plan.try">Почати тріал</a>
+        <a class="btn btn--glass" href="auth/?mode=signup&plan=business" data-i18n="plan.try">Почати тріал</a>
       </article>
     </div>
     <div class="enterprise" id="contact">
@@ -342,8 +344,8 @@
   <div class="final__veil"></div>
   <div class="wrap final__inner">
     <h2 id="final-title" class="final__title"><span data-i18n="final.t1">Поки ви читаєте це,</span> <span class="serif" data-i18n="final.t2">хтось публікує тендер для вас.</span></h2>
-    <form class="finder finder--center" action="app/" method="get">
-      <input type="hidden" name="onboard" value="1">
+    <form class="finder finder--center" action="auth/" method="get">
+      <input type="hidden" name="mode" value="signup">
       <label class="sr-only" for="company2" data-i18n="hero.label">Код компанії або сайт</label>
       <input id="company2" name="company" class="finder__input" placeholder="ЄДРПОУ, NIP, VAT або сайт компанії" data-i18n-ph="hero.ph">
       <button class="btn btn--primary btn--lg" type="submit" data-i18n="hero.btn">Знайти мої тендери</button>
@@ -359,10 +361,12 @@
       <p data-i18n="footer.p">AI-платформа для державних і донорських тендерів у Європі.</p>
     </div>
     <nav class="footer__nav" aria-label="Нижня навігація">
-      <a href="app/" data-i18n="footer.app">Демо застосунку</a>
+      <a href="app/?demo=1" data-i18n="footer.app">Демо застосунку</a>
       <a href="brand/" data-i18n="footer.brand">Бренд-кит</a>
       <a href="#pricing" data-i18n="nav.pricing">Тарифи</a>
       <a href="#faq" data-i18n="nav.faq">Питання</a>
+      <a href="legal/privacy.html" data-i18n="footer.privacy">Конфіденційність</a>
+      <a href="legal/terms.html" data-i18n="footer.terms">Умови</a>
     </nav>
     <p class="footer__credits"><span data-i18n="footer.photos">Фото:</span> Enes Gundogdu, Danist Soh, dominik hofbauer, Vitaly Gariev, Scott Graham, Sander Weeteling, Wes Hicks, Christina @ wocintechchat, American Public Power Association — <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a>. <span data-i18n="footer.map">Карта: Natural Earth.</span></p>
     <p class="footer__copy">© 2026 Tendera</p>

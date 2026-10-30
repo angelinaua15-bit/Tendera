@@ -323,3 +323,5 @@ a{color:inherit}
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
   .scanline{display:none}
 }
+
+.hero__fine a{color:var(--verd-hi);text-underline-offset:3px}
