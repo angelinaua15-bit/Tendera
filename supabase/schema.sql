@@ -214,3 +214,54 @@ grant select, update                 on public.profiles             to authentic
 grant select, delete                 on public.organization_members to authenticated;
 grant select, insert, update         on public.org_state            to authenticated;
 grant select, insert, delete         on public.invitations          to authenticated;
+
+-- ═════════════════════════ v2: профіль пошуку і бібліотека документів ═════════════════════════
+alter table public.organizations add column if not exists cpv_codes        text[] not null default '{}';
+alter table public.organizations add column if not exists keywords         text[] not null default '{}';
+alter table public.organizations add column if not exists exclude_keywords text[] not null default '{}';
+
+create table if not exists public.documents (
+  id          uuid primary key default gen_random_uuid(),
+  org_id      uuid not null references public.organizations (id) on delete cascade,
+  name        text not null check (char_length(name) between 1 and 200),
+  doc_type    text not null default 'Інше' check (char_length(doc_type) <= 60),
+  valid_until date,
+  path        text not null unique,
+  size_bytes  bigint check (size_bytes >= 0),
+  mime        text check (char_length(mime) <= 120),
+  uploaded_by uuid references auth.users (id) on delete set null,
+  created_at  timestamptz not null default now()
+);
+create index if not exists documents_org_idx on public.documents (org_id);
+alter table public.documents enable row level security;
+drop policy if exists "members read documents"   on public.documents;
+drop policy if exists "members add documents"    on public.documents;
+drop policy if exists "members update documents" on public.documents;
+drop policy if exists "members delete documents" on public.documents;
+create policy "members read documents"   on public.documents for select to authenticated using ((select public.is_org_member(org_id)));
+create policy "members add documents"    on public.documents for insert to authenticated with check ((select public.is_org_member(org_id)) and uploaded_by = (select auth.uid()));
+create policy "members update documents" on public.documents for update to authenticated using ((select public.is_org_member(org_id))) with check ((select public.is_org_member(org_id)));
+create policy "members delete documents" on public.documents for delete to authenticated using ((select public.is_org_member(org_id)));
+revoke all on public.documents from anon;
+grant select, insert, update, delete on public.documents to authenticated;
+
+-- Приватне сховище файлів: шлях <org_id>/<файл>, доступ лише учасникам компанії
+insert into storage.buckets (id, name, public, file_size_limit)
+values ('org-documents', 'org-documents', false, 26214400)
+on conflict (id) do update set public = false, file_size_limit = excluded.file_size_limit;
+
+create or replace function public.org_from_path(p_name text)
+returns uuid language plpgsql immutable set search_path = ''
+as $$
+declare seg text := split_part(p_name, '/', 1);
+begin
+  if seg ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then return seg::uuid; end if;
+  return null;
+end; $$;
+
+drop policy if exists "org members read files"   on storage.objects;
+drop policy if exists "org members upload files" on storage.objects;
+drop policy if exists "org members delete files" on storage.objects;
+create policy "org members read files"   on storage.objects for select to authenticated using (bucket_id = 'org-documents' and (select public.is_org_member(public.org_from_path(name))));
+create policy "org members upload files" on storage.objects for insert to authenticated with check (bucket_id = 'org-documents' and (select public.is_org_member(public.org_from_path(name))));
+create policy "org members delete files" on storage.objects for delete to authenticated using (bucket_id = 'org-documents' and (select public.is_org_member(public.org_from_path(name))));

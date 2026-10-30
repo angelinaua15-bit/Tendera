@@ -17,8 +17,8 @@
     ['CZ', 'Чехія', 'IČO', '8 цифр'], ['SK', 'Словаччина', 'IČO', '8 цифр'], ['RO', 'Румунія', 'CUI', '2–10 цифр'],
     ['MD', 'Молдова', 'IDNO', '13 цифр'], ['AT', 'Австрія', 'UID (VAT)', 'ATU + 8 цифр'], ['NL', 'Нідерланди', 'KvK', '8 цифр'], ['XX', 'Інша країна', 'Реєстраційний номер', '']
   ];
-  const INDUSTRIES = ['Будівництво й ремонт', 'Енергетика', 'Дороги й мости', 'Водопостачання', 'IT і програмне забезпечення', 'Кібербезпека', 'Медичне обладнання', 'Обладнання й техніка', 'Транспорт і логістика', 'Консалтинг і аудит', 'Обслуговування будівель', 'Постачання товарів'];
-  const REGIONS = [['UA', 'Україна'], ['PL', 'Польща'], ['EU', 'Увесь ЄС (TED)'], ['DONOR', 'Донорські програми']];
+  const INDUSTRIES = Object.keys(window.TENDERA_TAX.INDUSTRIES);
+  const REGIONS = window.TENDERA_TAX.REGIONS.slice(0, 6);
   const FREE_MAIL = /@(gmail|ukr|i\.ua|meta\.ua|yahoo|outlook|hotmail|icloud|proton|protonmail|mail|yandex)\./i;
 
   /* ---------- валідація ---------- */
@@ -62,7 +62,7 @@
     else { btn.disabled = false; if (btn.dataset.label) btn.innerHTML = btn.dataset.label; }
   }
   function alertBox(kind, html) { return `<div class="alert alert--${kind}" role="${kind === 'bad' ? 'alert' : 'status'}">${html}</div>`; }
-  const notConfigured = () => configured ? '' : alertBox('info', 'Реєстрація відкривається найближчим часом. Поки що можна подивитись <a href="../app/?demo=1" style="color:inherit">демо застосунку</a>.');
+  const notConfigured = () => configured ? '' : alertBox('info', 'Реєстрація тимчасово недоступна. Спробуйте трохи пізніше.');
   function draw(html) { card.innerHTML = html; card.classList.remove('card-in'); void card.offsetWidth; card.classList.add('card-in'); const first = $('input:not([type=hidden]),select', card); if (first && matchMedia('(min-width: 981px)').matches) first.focus(); }
   function topSwitch(mode) {
     sw.innerHTML = mode === 'signup' ? 'Вже маєте акаунт?<a href="?mode=login">Увійти</a>' : mode === 'login' ? 'Ще немає акаунта?<a href="?mode=signup">Зареєструвати компанію</a>' : '<a href="?mode=login">Повернутись до входу</a>';
@@ -101,7 +101,7 @@
       };
     } else if (SU.step === 2) {
       const c = COUNTRIES.find(x => x[0] === SU.country) || COUNTRIES[0];
-      draw(`${steps}<h1>Про компанію</h1><p class="sub">За кодом ми автоматично заповнимо профіль з відкритих реєстрів.</p>
+      draw(`${steps}<h1>Про компанію</h1><p class="sub">Ці дані з’являться в профілі компанії та супровідних листах.</p>
       <form id="f" novalidate>
         <div class="f"><label for="company_name">Назва компанії</label><input id="company_name" autocomplete="organization" value="${esc(SU.company_name)}" placeholder="ТОВ «Назва»" required></div>
         <div class="row">
@@ -126,12 +126,12 @@
         SU.step = 3; signup();
       };
     } else {
-      draw(`${steps}<h1>Які тендери шукаємо?</h1><p class="sub">Від цього залежить ваш ранковий відбір. Змінити можна будь-коли.</p>
+      draw(`${steps}<h1>Які тендери шукаємо?</h1><p class="sub">Від цього залежить, які тендери ви побачите першими. Змінити можна будь-коли.</p>
       <form id="f" novalidate>
         <fieldset class="f" style="border:0;padding:0;margin:0"><legend class="lbl" style="margin-bottom:8px">Напрями діяльності</legend><div class="chips" id="ind">${INDUSTRIES.map(i => `<label><input type="checkbox" value="${esc(i)}"${SU.industries.includes(i) ? ' checked' : ''}><span>${esc(i)}</span></label>`).join('')}</div></fieldset>
         <fieldset class="f" style="border:0;padding:0;margin:0"><legend class="lbl" style="margin-bottom:8px">Де шукати</legend><div class="chips" id="reg">${REGIONS.map(([k, n]) => `<label><input type="checkbox" value="${k}"${SU.regions.includes(k) ? ' checked' : ''}><span>${n}</span></label>`).join('')}</div></fieldset>
         <label class="check"><input type="checkbox" id="terms"${SU.terms ? ' checked' : ''} required><span>Погоджуюсь з <a href="../legal/terms.html" target="_blank" rel="noopener">умовами використання</a> і <a href="../legal/privacy.html" target="_blank" rel="noopener">політикою конфіденційності</a>.</span></label>
-        <label class="check"><input type="checkbox" id="marketing"${SU.marketing ? ' checked' : ''}><span>Надсилати новини продукту й аналітику ринку тендерів (не частіше разу на місяць).</span></label>
+        <label class="check"><input type="checkbox" id="marketing"${SU.marketing ? ' checked' : ''}><span>Надсилати новини продукту (не частіше разу на місяць).</span></label>
         <div id="msg"></div>
         <div class="actions"><button class="btn btn--ghost" type="button" id="back">Назад</button><button class="btn btn--primary" type="submit" id="go"${configured ? '' : ' disabled'}>Створити акаунт</button></div>
       </form>`);

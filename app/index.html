@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Tendera — робочий простір</title>
-<meta name="description" content="Демо застосунку Tendera: стрічка тендерів, AI-брифи, pipeline і підготовка заявок.">
+<meta name="description" content="Робочий простір Tendera: відкриті тендери з Prozorro і TED, pipeline, заявки й документи компанії.">
 <meta name="theme-color" content="#0B1A26">
 <link rel="icon" href="../brand/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../brand/apple-touch-icon.png">
@@ -20,22 +20,22 @@
   <aside class="side" id="side" aria-label="Бічна панель">
     <a class="side__brand" href="#/" aria-label="Tendera — огляд"><img src="../brand/logo.svg" height="30" alt="Tendera"></a>
     <button class="org" type="button" id="orgBtn" aria-label="Компанія">
-      <span class="org__logo" id="orgLogo">ГІ</span>
-      <span class="org__txt"><b id="orgName">ТОВ «Галбуд-Інжиніринг»</b><small id="orgPlan">Pro · тріал, 12 днів</small></span>
+      <span class="org__logo" id="orgLogo"></span>
+      <span class="org__txt"><b id="orgName"></b><small id="orgPlan"></small></span>
     </button>
     <nav class="side__nav" aria-label="Розділи">
       <a href="#/" data-route="overview"><svg viewBox="0 0 24 24"><path d="M4 13h6V4H4zM14 20h6v-9h-6zM4 20h6v-4H4zM14 4v4h6V4z"/></svg>Огляд</a>
-      <a href="#/tenders" data-route="tenders"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg>Тендери<span class="badge" id="newCount">6</span></a>
+      <a href="#/tenders" data-route="tenders"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg>Тендери<span class="badge" id="newCount" hidden title="Нові підходящі тендери за 24 години"></span></a>
       <a href="#/pipeline" data-route="pipeline"><svg viewBox="0 0 24 24"><path d="M4 5h4v14H4zM10 5h4v9h-4zM16 5h4v6h-4z"/></svg>Pipeline</a>
-      <a href="#/bid/UA-2026-1041" data-route="bid"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h4"/></svg>Заявки</a>
+      <a href="#/bid" data-route="bid"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h4"/></svg>Заявки</a>
       <a href="#/library" data-route="library"><svg viewBox="0 0 24 24"><path d="M4 4h4v16H4zM10 4h4v16h-4z"/><path d="m16 5 3.8-1 3 15.4-3.9.8z" transform="translate(-2 1)"/></svg>Бібліотека</a>
       <a href="#/analytics" data-route="analytics"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Аналітика</a>
       <a href="#/settings" data-route="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Налаштування</a>
     </nav>
     <div class="side__card">
       <img src="../brand/mark.svg" width="28" height="28" alt="">
-      <p><b>Дайджест о 8:00</b><br>Підключіть Telegram, щоб отримувати тендери на телефон.</p>
-      <a class="btn btn--sm btn--ghost" href="#/settings?tab=integrations">Підключити</a>
+      <p><b>Профіль пошуку</b><br>Чим точніші напрями, регіони й бюджет — тим точніший відбір тендерів.</p>
+      <a class="btn btn--sm btn--ghost" href="#/settings?tab=search">Налаштувати</a>
     </div>
     <a class="side__back" href="../">← На сайт Tendera</a>
   </aside>
@@ -48,22 +48,21 @@
         <span>Пошук тендерів, замовників, команд</span><kbd>⌘K</kbd>
       </button>
       <div class="top__right">
-        <span class="demo-pill" title="Усі дані в демо ілюстративні">Демо-дані</span>
+        <span class="demo-pill" id="freshPill">Дані оновлюються</span>
         <button class="icon-btn" id="themeBtn" type="button" aria-label="Перемкнути тему"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
-        <button class="icon-btn" id="bellBtn" type="button" aria-label="Сповіщення" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg><i class="dot"></i></button>
-        <button class="avatar" id="meBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="mePop" title="Олег Коваль">ОК</button>
+        <button class="icon-btn" id="bellBtn" type="button" aria-label="Сповіщення" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg></button>
+        <button class="avatar" id="meBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="mePop" title="Акаунт"></button>
       </div>
       <div class="pop" id="mePop" hidden>
-        <div class="pop__me"><b id="meName">Олег Коваль</b><span id="meMail">Демо-користувач</span></div>
+        <div class="pop__me"><b id="meName"></b><span id="meMail"></span></div>
+        <a href="#/settings?tab=account" class="pop__item"><b>Акаунт</b></a>
         <a href="#/settings?tab=company" class="pop__item"><b>Профіль компанії</b></a>
         <a href="#/settings?tab=team" class="pop__item"><b>Команда</b></a>
         <button type="button" class="pop__item pop__btn" id="signOut"><b>Вийти</b></button>
       </div>
       <div class="pop" id="bellPop" hidden>
         <p class="pop__title">Сповіщення</p>
-        <a href="#/tender/UA-2026-1188" class="pop__item"><b>Дедлайн через 11 днів</b><span>Модульні котельні, Київ</span></a>
-        <a href="#/library" class="pop__item"><b>Довідка спливає через 6 днів</b><span>Відсутність податкової заборгованості</span></a>
-        <a href="#/tender/UA-2026-1355" class="pop__item"><b>Новий тендер, збіг 79</b><span>Ремонт школи, Харків</span></a>
+        <div id="bellList"></div>
       </div>
     </header>
     <main id="view" class="view" tabindex="-1"></main>
@@ -84,8 +83,8 @@
 <script src="../assets/vendor/supabase.js"></script>
 <script src="../assets/js/config.js"></script>
 <script src="../assets/js/auth-client.js"></script>
+<script src="../assets/js/taxonomy.js"></script>
 <script src="../assets/js/europe.js"></script>
-<script src="data.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
