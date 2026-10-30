@@ -32,10 +32,12 @@
       <a href="#/analytics" data-route="analytics"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Аналітика</a>
       <a href="#/settings" data-route="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Налаштування</a>
     </nav>
-    <div class="side__card">
-      <img src="../brand/mark.svg" width="28" height="28" alt="">
-      <p><b>Профіль пошуку</b><br>Чим точніші напрями, регіони й бюджет — тим точніший відбір тендерів.</p>
-      <a class="btn btn--sm btn--ghost" href="#/settings?tab=search">Налаштувати</a>
+    <div class="side__card side__me" id="sideMe">
+      <div class="me__row"><span class="avatar" id="sideAvatar" aria-hidden="true"></span><span class="me__txt"><b id="sideName"></b><small id="sideRole"></small></span></div>
+      <div class="me__plan"><span class="me__label">Підписка</span><b id="sidePlan"></b><span class="chip" id="sideStatus"></span></div>
+      <div class="meter__bar" id="sideBar" hidden><i></i></div>
+      <small class="me__note" id="sideNote"></small>
+      <a class="btn btn--sm btn--ghost" id="sideCta" href="#/settings?tab=billing">Керувати підпискою</a>
     </div>
     <a class="side__back" href="../">← На сайт Tendera</a>
   </aside>

@@ -698,10 +698,30 @@
     const days = o.trial_ends_at ? Math.max(0, Math.ceil((new Date(o.trial_ends_at) - Date.now()) / 864e5)) : 0;
     const plan = o.plan || 'trial';
     $('#orgPlan').textContent = expired() ? 'Підписка неактивна' : plan === 'trial' ? `Пробний період · ${days} ${plural(days, 'день', 'дні', 'днів')}` : `Тариф ${PLAN_NAME[plan] || plan}`;
+    paintSideMe();
     $('#meName').textContent = ACC.name; $('#meMail').textContent = ACC.email; $('#meBtn').textContent = initials(ACC.name); $('#meBtn').title = ACC.name;
     const M = DATA.meta; $('#freshPill').textContent = DATA.loading ? 'Завантаження тендерів…' : M && M.generatedAt ? `Оновлено ${ago(M.generatedAt)}` : 'Дані оновлюються';
     $('#freshPill').title = M && M.counts ? `Відкритих тендерів: Prozorro ${nf.format(M.counts.ua)}, TED ${nf.format(M.counts.eu)}` : '';
     const n = matched().filter(t => t.pub && Date.now() - Date.parse(t.pub) < 864e5).length; $('#newCount').textContent = n; $('#newCount').hidden = !n;
+  }
+  function paintSideMe() {
+    const o = ACC.org, plan = o.plan || 'trial', exp = expired();
+    $('#sideAvatar').textContent = initials(ACC.name); $('#sideName').textContent = ACC.name;
+    $('#sideRole').textContent = [ACC.profile.job_title || ROLE_UA[ACC.role], ACC.email].filter(Boolean).join(' · ');
+    $('#sidePlan').textContent = exp ? (plan === 'trial' ? 'Пробний період' : PLAN_NAME[plan] || plan) : PLAN_NAME[plan] || plan;
+    const st = $('#sideStatus'), bar = $('#sideBar'), note = $('#sideNote'), cta = $('#sideCta');
+    bar.hidden = true;
+    if (exp) { st.textContent = 'Неактивна'; st.className = 'chip chip--bad'; note.textContent = 'Дані збережені — оберіть тариф, щоб продовжити.'; cta.textContent = 'Обрати тариф'; cta.className = 'btn btn--sm btn--primary'; }
+    else if (plan === 'trial') {
+      const left = Math.max(0, daysTo(o.trial_ends_at) ?? 0), total = 14;
+      st.textContent = `${left} ${plural(left, 'день', 'дні', 'днів')}`; st.className = 'chip ' + (left <= 3 ? 'chip--warn' : 'chip--good');
+      bar.hidden = false; $('i', bar).style.width = Math.min(100, (left / total) * 100) + '%';
+      note.textContent = `Усі можливості Pro до ${fmtDate(new Date(o.trial_ends_at))}`; cta.textContent = 'Обрати тариф'; cta.className = 'btn btn--sm ' + (left <= 3 ? 'btn--primary' : 'btn--ghost');
+    } else {
+      st.textContent = 'Активна'; st.className = 'chip chip--good';
+      note.textContent = o.paid_until ? `Оплачено до ${fmtDate(new Date(o.paid_until))}` : (o.billing_period === 'year' ? 'Щорічна оплата' : 'Щомісячна оплата');
+      cta.textContent = 'Керувати підпискою'; cta.className = 'btn btn--sm btn--ghost';
+    }
   }
   function paintBell() {
     const items = [];

@@ -500,3 +500,18 @@ textarea.editor{resize:vertical;color:var(--text)}
 .bill__ent{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
 .bill__ent h3{margin:0 0 4px}.bill__ent p{margin:0}
 @media (max-width:900px){.bill__now{grid-template-columns:1fr}.bill__plans{grid-template-columns:1fr}}
+
+/* ---------- акаунт і підписка в бічній панелі ---------- */
+.side__me{display:grid;gap:12px}
+.me__row{display:flex;align-items:center;gap:10px;min-width:0}
+.me__txt{display:grid;min-width:0}
+.me__txt b{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.me__txt small{font-size:12px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.me__plan{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--line)}
+.me__label{width:100%;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3)}
+.me__plan b{font-family:var(--serif);font-size:24px;font-weight:500;color:var(--brass-hi);line-height:1}
+.me__plan .chip{margin-left:auto}
+.side__me .meter__bar{height:6px}
+.side__me .meter__bar[hidden]{display:none}
+.me__note{font-size:12px;color:var(--text-2);line-height:1.4}
+.side__me .btn{justify-self:start}
