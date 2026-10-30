@@ -86,7 +86,7 @@
   const LIVE = { meta: null, items: [], ready: false };
   const CUR = { UAH: '₴', EUR: '€', USD: '$', GBP: '£' };
   const money = (v, cur) => v == null ? (lang === 'en' ? 'not stated' : 'не вказано') : (CUR[cur] ? `${CUR[cur]} ${nf(v)}` : `${nf(v)} ${cur}`);
-  const eurOf = t => t.v == null ? null : t.cur === 'EUR' ? t.v : (LIVE.meta && LIVE.meta.rates && LIVE.meta.rates.toEur[t.cur] ? t.v * LIVE.meta.rates.toEur[t.cur] : null);
+  const eurOf = t => t.v == null ? null : t.cur === 'EUR' ? t.v : (LIVE.meta && LIVE.meta.toEur && LIVE.meta.toEur[t.cur] ? t.v * LIVE.meta.toEur[t.cur] : null);
   const eurShort = v => lang === 'en'
     ? (v >= 1e9 ? '€' + (v / 1e9).toFixed(1) + 'bn' : v >= 1e6 ? '€' + (v / 1e6).toFixed(1) + 'm' : '€' + nf(v))
     : (v >= 1e9 ? '€' + (v / 1e9).toLocaleString('uk-UA', { maximumFractionDigits: 1 }) + ' млрд' : v >= 1e6 ? '€' + (v / 1e6).toLocaleString('uk-UA', { maximumFractionDigits: 1 }) + ' млн' : '€' + nf(v));
@@ -103,13 +103,10 @@
     const tick = () => { el.textContent = text.slice(0, ++i); if (i < text.length) typeTimer = setTimeout(tick, 14 + Math.random() * 26); };
     typeTimer = setTimeout(tick, 900);
   }
-  function heroPick() {
-    const fresh = LIVE.items.filter(t => t.src === 'prozorro' && t.v && t.d && t.pub && days(t) >= 5).sort((a, b) => Date.parse(b.pub) - Date.parse(a.pub)).slice(0, 40);
-    return fresh.sort((a, b) => (eurOf(b) || 0) - (eurOf(a) || 0))[0] || LIVE.items[0];
-  }
+  const heroPick = () => (LIVE.meta.hero || []).filter(t => days(t) >= 1)[0] || LIVE.items[0];
   function paintLive() {
     if (!LIVE.ready) return;
-    const M = LIVE.meta || {}; const total = LIVE.items.length;
+    const M = LIVE.meta || {}; const total = M.counts ? M.counts.ua + M.counts.eu : 0;
     if (total) $('#liveStatus').textContent = lang === 'en' ? `${nf(total)} open tenders in Prozorro and TED · updated ${ago(M.generatedAt)}` : `${nf(total)} відкритих тендерів у Prozorro і TED · оновлено ${ago(M.generatedAt)}`;
     const t = heroPick();
     if (t) {
@@ -118,12 +115,12 @@
       $('#hcTitle').textContent = t.t;
       $('#hcValue').textContent = money(t.v, t.cur);
       $('#hcDeadline').textContent = inDays(days(t));
-      $('#hcDocs').textContent = t.docs && t.docs.length ? String(t.docs.length) : '—';
+      $('#hcDocs').textContent = t.docs ? String(t.docs) : '—';
       typeInto($('#typed'), (t.b ? t.b + '. ' : '') + (t.d || '').slice(0, 170) + ((t.d || '').length > 170 ? '…' : ''));
       $('#heroLink').href = t.url; $('#heroCard').hidden = false; $('#heroLink').hidden = false;
       $('#hcCount').textContent = nf(total); $('#heroCount').hidden = false;
     }
-    const sum = M.totalEur || LIVE.items.reduce((a, x) => a + (eurOf(x) || 0), 0);
+    const sum = M.totalEur || 0;
     if (sum) { $('#mapValue').textContent = eurShort(sum); $('#mapCounter').hidden = false; }
     $('#feedNote').textContent = M.generatedAt ? (lang === 'en' ? `Sources: Prozorro and TED. Updated ${ago(M.generatedAt)}.` : `Джерела: Prozorro і TED. Оновлено ${ago(M.generatedAt)}.`) : '';
     feedIdx = 0; $('#feed').innerHTML = ''; for (let i = 0; i < 5; i++) pushFeed();
@@ -140,14 +137,13 @@
     addPing(t);
   }
   async function loadLive() {
-    const get = async f => { const r = await fetch('data/' + f, { cache: 'no-cache' }); if (!r.ok) throw new Error(r.status); return r.json(); };
-    const [meta, ua, eu] = await Promise.allSettled([get('meta.json'), get('tenders-ua.json'), get('tenders-eu.json')]);
-    LIVE.meta = meta.status === 'fulfilled' ? meta.value : null;
+    const r = await fetch('data/summary.json', { cache: 'no-cache' }); if (!r.ok) return;
+    LIVE.meta = await r.json();
     const now = Date.now();
-    LIVE.items = [].concat(ua.status === 'fulfilled' ? ua.value.items : [], eu.status === 'fulfilled' ? eu.value.items : []).filter(t => t && t.end && Date.parse(t.end) > now);
-    feedList = [...LIVE.items].sort((a, b) => Date.parse(b.pub || 0) - Date.parse(a.pub || 0)).slice(0, 40).reverse();
+    LIVE.items = (LIVE.meta.latest || []).filter(t => t && t.end && Date.parse(t.end) > now);
+    feedList = [...LIVE.items].reverse();
+    allPins = (LIVE.meta.pins || []).map(([k, v]) => pinOf(k === 'u' ? { src: 'prozorro', r: v } : { src: 'ted', cc: v })).filter(Boolean);
     LIVE.ready = true; paintLive();
-    allPins = LIVE.items.slice(0, 1500).map(pinOf).filter(Boolean);
   }
 
   /* ---------- Europe map with real tender locations ---------- */

@@ -102,10 +102,10 @@ export function normalizeProzorro(d) {
   const lots = (d.lots || []).filter(l => l.status !== 'cancelled' && l.status !== 'unsuccessful');
   const guarantee = d.guarantee && d.guarantee.amount ? d.guarantee : lots.reduce((g, l) => l.guarantee && l.guarantee.amount ? { amount: (g ? g.amount : 0) + l.guarantee.amount, currency: l.guarantee.currency } : g, null);
   const docs = (d.documents || []).filter(x => x.url).filter((x, i, a) => a.findIndex(y => y.title === x.title) === i)
-    .filter(x => !/sign\.p7s$/i.test(x.title || '')).slice(0, 12).map(x => ({ t: clip(x.title, 120), u: x.url, f: (x.format || '').split('/').pop() }));
+    .filter(x => !/sign\.p7s$/i.test(x.title || '')).slice(0, 6).map(x => ({ t: clip(x.title, 120), u: x.url, f: (x.format || '').split('/').pop() }));
   return {
     id: d.tenderID, src: 'prozorro', cc: 'UA',
-    t: clip(d.title, 260), d: clip(d.description || (items[0] && items[0].description) || '', 700),
+    t: clip(d.title, 240), d: clip(d.description || (items[0] && items[0].description) || '', 420),
     b: clip(pe.name, 200), bc: pe.identifier && pe.identifier.id || '', r: region, loc: clip(addr.locality, 60),
     v: d.value && d.value.amount ? Math.round(d.value.amount) : null, cur: (d.value && d.value.currency) || 'UAH', vat: d.value ? !!d.value.valueAddedTaxIncluded : null,
     g: guarantee ? Math.round(guarantee.amount) : null,
@@ -140,7 +140,7 @@ async function fetchProzorro(previous, meta) {
   // деталі: беремо з попереднього запуску, якщо тендер не змінювався
   const ids = [...cand.values()];
   const reuse = [], need = [];
-  for (const x of ids) { const p = prev.get(x.tenderID); if (p && p.mod === x.dateModified) reuse.push(p); else need.push(x); }
+  for (const x of ids) { const p = prev.get(x.tenderID); if (p && p.mod === x.dateModified) reuse.push({ ...p, t: clip(p.t, 240), d: clip(p.d, 420), docs: (p.docs || []).slice(0, 6) }); else need.push(x); }
   log(`Prozorro: ${reuse.length} без змін, ${need.length} завантажуємо`);
   const fetched = await pool(need, 8, async x => normalizeProzorro((await http(`${UA_API}/tenders/${x.id}`)).data));
   const errors = fetched.filter(f => f && f.__error).length;
@@ -244,6 +244,13 @@ export async function main() {
   await fs.writeFile(path.join(OUT, 'tenders-ua.json'), JSON.stringify({ generatedAt: meta.generatedAt, items: ua }));
   await fs.writeFile(path.join(OUT, 'tenders-eu.json'), JSON.stringify({ generatedAt: meta.generatedAt, items: eu }));
   await fs.writeFile(path.join(OUT, 'meta.json'), JSON.stringify(meta, null, 1));
+  // Легкий підсумок для лендінгу: останні оголошення і точки для карти
+  const slim = t => ({ id: t.id, src: t.src, cc: t.cc, cn: t.cn, t: t.t, b: t.b, d: t.src === 'prozorro' ? clip(t.d, 200) : '', v: t.v, cur: t.cur, end: t.end, pub: t.pub, url: t.url, docs: (t.docs || []).length, r: t.r });
+  const all = ua.concat(eu).filter(t => t.pub);
+  const latest = [...all].sort((a, b) => Date.parse(b.pub) - Date.parse(a.pub)).slice(0, 40).map(slim);
+  const heroPool = ua.filter(t => t.v && t.d && t.end && Date.parse(t.end) - Date.now() > 5 * 864e5).sort((a, b) => Date.parse(b.pub || 0) - Date.parse(a.pub || 0)).slice(0, 60).sort((a, b) => eurOf(b) - eurOf(a)).slice(0, 5).map(slim);
+  const pins = ua.concat(eu).slice(0, 2500).map(t => t.src === 'prozorro' ? ['u', t.r || ''] : ['e', t.cc]);
+  await fs.writeFile(path.join(OUT, 'summary.json'), JSON.stringify({ generatedAt: meta.generatedAt, counts: meta.counts, totalEur: meta.totalEur, uahPerEur: rates ? rates.uahPerEur : null, toEur: rates ? { UAH: rates.toEur.UAH, PLN: rates.toEur.PLN, CZK: rates.toEur.CZK, RON: rates.toEur.RON, HUF: rates.toEur.HUF, USD: rates.toEur.USD, GBP: rates.toEur.GBP, SEK: rates.toEur.SEK, DKK: rates.toEur.DKK } : null, latest, hero: heroPool, pins }));
   log(`Готово: UA ${ua.length}, ЄС ${eu.length}, сума ≈ €${meta.totalEur.toLocaleString('en')}`);
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch(e => { console.error(e); process.exit(1); });
