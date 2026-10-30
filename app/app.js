@@ -41,7 +41,7 @@
   const local = { get(k, d) { try { const v = localStorage.getItem('tendera.' + k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem('tendera.' + k, JSON.stringify(v)); } catch { /* storage unavailable */ } } };
   const S = { pipeline: {}, outcomes: {}, dismissed: {}, saved: {}, checks: {}, notes: {}, drafts: {}, snaps: {}, theme: local.get('theme', 'dark'), view: local.get('view', 'cards') };
   const SYNC = ['pipeline', 'outcomes', 'dismissed', 'saved', 'checks', 'notes', 'drafts', 'snaps'];
-  let ACC = null; const DATA = { items: [], byId: new Map(), meta: null, error: null };
+  let ACC = null; const DATA = { items: [], byId: new Map(), meta: null, error: null, loading: true };
   document.documentElement.dataset.theme = S.theme;
   let syncTimer = 0;
   function save() {
@@ -62,7 +62,7 @@
   let P = null;
   function buildProfile(o) {
     const prefixes = [];
-    (o.industries || []).forEach(name => (TAX.INDUSTRIES[name] || []).forEach(p => prefixes.push({ p, why: name })));
+    (o.industries || []).forEach(name => (((TAX && TAX.INDUSTRIES) || {})[name] || []).forEach(p => prefixes.push({ p, why: name })));
     (o.cpv_codes || []).forEach(c => { const p = String(c).split('-')[0].replace(/\D/g, '').replace(/0+$/, ''); if (p.length >= 2) prefixes.push({ p, why: `CPV ${c}` }); });
     return { prefixes, regions: new Set(o.regions || []), min: o.budget_min != null ? +o.budget_min : null, max: o.budget_max != null ? +o.budget_max : null,
       kw: (o.keywords || []).map(s => s.toLowerCase().trim()).filter(Boolean), ex: (o.exclude_keywords || []).map(s => s.toLowerCase().trim()).filter(Boolean), empty: !prefixes.length };
@@ -139,6 +139,7 @@
   let cleanup = [];
   const onCleanup = f => cleanup.push(f);
   function render() {
+    if (!ACC || !ACC.org) return; // до входу і завантаження компанії нічого не малюємо
     cleanup.forEach(f => f()); cleanup = [];
     const raw = location.hash.replace(/^#\/?/, ''); const [pathPart, query = ''] = raw.split('?'); const [name = '', ...rest] = pathPart.split('/');
     const arg = rest.length ? decodeURIComponent(rest.join('/')) : undefined; const params = Object.fromEntries(new URLSearchParams(query));
@@ -158,7 +159,7 @@
   /* ---------- data helpers ---------- */
   const matched = () => DATA.items.filter(t => t._s && t._s.s >= 50 && !S.dismissed[t.id]);
   const inPipe = () => Object.keys(S.pipeline).map(getT).filter(Boolean);
-  const dataNote = () => DATA.error ? `<div class="card note note--warn"><b>Дані про тендери ще готуються</b><p>${esc(DATA.error)}</p></div>` : '';
+  const dataNote = () => DATA.loading ? `<div class="card note"><b>Завантажуємо відкриті тендери…</b><p>Prozorro і TED — кілька секунд. Pipeline, заявки й документи вже працюють.</p></div>` : DATA.error ? `<div class="card note note--warn"><b>Дані про тендери ще готуються</b><p>${esc(DATA.error)}</p></div>` : '';
   const profileNote = () => P.empty ? `<div class="card note note--accent"><div><b>Налаштуйте профіль пошуку</b><p>Оберіть напрями діяльності або коди CPV — і ми покажемо, які тендери вам підходять.</p></div><a class="btn btn--primary" href="#/settings?tab=search">Налаштувати</a></div>` : '';
 
   /* ===================== OVERVIEW ===================== */
@@ -276,7 +277,7 @@
     }
     function apply() {
       const l = list();
-      if (!l.length) { out.innerHTML = `<div class="empty"><b>${DATA.items.length ? 'Нічого не знайдено' : 'Тендери ще завантажуються'}</b>${DATA.items.length ? 'Змініть фільтри або розширте профіль пошуку.' : 'Перше оновлення даних займає кілька хвилин після публікації сайту.'}</div>`; return; }
+      if (!l.length) { out.innerHTML = `<div class="empty"><b>${DATA.items.length ? 'Нічого не знайдено' : DATA.loading ? 'Завантажуємо тендери…' : 'Тендерів поки немає'}</b>${DATA.items.length ? 'Змініть фільтри або розширте профіль пошуку.' : DATA.loading ? 'Це займає кілька секунд.' : esc(DATA.error || 'Спробуйте оновити сторінку трохи пізніше.')}</div>`; return; }
       const part = l.slice(0, F.shown);
       out.innerHTML = (S.view === 'table'
         ? `<div class="tscroll"><table class="table"><thead><tr><th>Збіг</th><th>Тендер</th><th>Країна</th><th>Бюджет</th><th>Дедлайн</th></tr></thead><tbody>${part.map(t => `<tr><td><b class="num" style="color:${t._s ? scoreColor(t._s.s) : 'inherit'}">${t._s ? t._s.s : '—'}</b></td><td><a href="${href(t)}">${esc(titleOf(t))}</a><br><small style="color:var(--text-3)">${esc(t.b)}</small></td><td>${esc(t.cc)}</td><td class="num">${money(t.v, t.cur)}</td><td><span class="dl ${dlCls(daysLeft(t))}">${fmtDate(t.end && new Date(t.end))}</span></td></tr>`).join('')}</tbody></table></div>`
@@ -394,6 +395,7 @@
   /* ===================== PIPELINE ===================== */
   function pipeline() {
     return `<div class="ph"><div><h1>Pipeline</h1><p>Перетягуйте картки між етапами або використовуйте стрілки. Бачить уся команда.</p></div><div class="ph__actions"><a class="btn btn--primary" href="#/tenders">Знайти тендер</a></div></div>
+    ${DATA.loading && inPipe().length < Object.keys(S.pipeline).length ? '<p class="muted" style="margin:-8px 0 14px">Завантажуємо картки тендерів…</p>' : ''}
     <div class="board" id="board">${STAGES.map((s, si) => { const items = inPipe().filter(t => S.pipeline[t.id] === s.id);
       return `<section class="col" data-stage="${s.id}" aria-label="${s.name}"><div class="col__head"><b>${s.name}</b><span>${items.length}</span></div><div class="col__sum num">${items.length ? eurShort(items.reduce((a, t) => a + (eurOf(t) || 0), 0)) : '—'}</div>
         ${items.map(t => `<article class="kcard" draggable="true" data-id="${esc(t.id)}"><a href="${href(t)}">${esc(titleOf(t))}</a>
@@ -607,12 +609,13 @@
   $('#signOut').onclick = signOut;
   async function signOut() { await AUTH.client.auth.signOut(); location.replace(AUTH.siteRoot() + 'auth/?mode=login'); }
   function paintAccount() {
-    const o = ACC.org; $('#orgName').textContent = o.name;
-    $('#orgLogo').textContent = initials(o.name.replace(/^(ТОВ|ПП|ФОП|ПрАТ|АТ|КП|Sp\. z o\.o\.|GmbH)\s*/i, '').replace(/[«»"']/g, ''));
-    const days = Math.max(0, Math.ceil((new Date(o.trial_ends_at) - Date.now()) / 864e5));
-    $('#orgPlan').textContent = o.plan === 'trial' ? `Пробний період · ${days} ${plural(days, 'день', 'дні', 'днів')}` : `Тариф ${o.plan[0].toUpperCase() + o.plan.slice(1)}`;
+    const o = ACC.org; const oname = o.name || 'Моя компанія'; $('#orgName').textContent = oname;
+    $('#orgLogo').textContent = initials(oname.replace(/^(ТОВ|ПП|ФОП|ПрАТ|АТ|КП|Sp\. z o\.o\.|GmbH)\s*/i, '').replace(/[«»"']/g, ''));
+    const days = o.trial_ends_at ? Math.max(0, Math.ceil((new Date(o.trial_ends_at) - Date.now()) / 864e5)) : 0;
+    const plan = o.plan || 'trial';
+    $('#orgPlan').textContent = plan === 'trial' ? `Пробний період · ${days} ${plural(days, 'день', 'дні', 'днів')}` : `Тариф ${plan[0].toUpperCase() + plan.slice(1)}`;
     $('#meName').textContent = ACC.name; $('#meMail').textContent = ACC.email; $('#meBtn').textContent = initials(ACC.name); $('#meBtn').title = ACC.name;
-    const M = DATA.meta; $('#freshPill').textContent = M && M.generatedAt ? `Оновлено ${ago(M.generatedAt)}` : 'Дані оновлюються';
+    const M = DATA.meta; $('#freshPill').textContent = DATA.loading ? 'Завантаження тендерів…' : M && M.generatedAt ? `Оновлено ${ago(M.generatedAt)}` : 'Дані оновлюються';
     $('#freshPill').title = M && M.counts ? `Відкритих тендерів: Prozorro ${nf.format(M.counts.ua)}, TED ${nf.format(M.counts.eu)}` : '';
     const n = matched().filter(t => t.pub && Date.now() - Date.parse(t.pub) < 864e5).length; $('#newCount').textContent = n; $('#newCount').hidden = !n;
   }
@@ -652,12 +655,15 @@
   /* ---------- boot ---------- */
   function rescore() { P = buildProfile(ACC.org); DATA.items.forEach(t => { t._s = score(t); }); }
   async function loadData() {
-    const get = async f => { const r = await fetch(`../data/${f}`, { cache: 'no-cache' }); if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); };
+    const get = async f => {
+      const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 60000);
+      try { const r = await fetch(`../data/${f}`, { cache: 'no-cache', signal: ctl.signal }); if (!r.ok) throw new Error(`HTTP ${r.status}`); return await r.json(); } finally { clearTimeout(timer); }
+    };
     const [meta, ua, eu] = await Promise.allSettled([get('meta.json'), get('tenders-ua.json'), get('tenders-eu.json')]);
     DATA.meta = meta.status === 'fulfilled' ? meta.value : null;
     const now = Date.now();
-    const items = [].concat(ua.status === 'fulfilled' ? ua.value.items : [], eu.status === 'fulfilled' ? eu.value.items : []).filter(t => t && t.id && t.end && Date.parse(t.end) > now);
-    items.forEach(t => { t.cpv = t.cpv || []; });
+    const items = [].concat(ua.status === 'fulfilled' ? ua.value.items || [] : [], eu.status === 'fulfilled' ? eu.value.items || [] : []).filter(t => t && t.id && t.end && Date.parse(t.end) > now);
+    items.forEach(t => { t.cpv = t.cpv || []; t.t = t.t || ''; t.b = t.b || ''; });
     DATA.items = items; DATA.byId = new Map(items.map(t => [t.id, t]));
     if (!items.length) DATA.error = 'Оновлення з Prozorro і TED запускається автоматично щогодини. Якщо сайт щойно опубліковано, перше оновлення займе до 15 хвилин.';
   }
@@ -665,13 +671,16 @@
     const c = AUTH.client, uid = session.user.id;
     const [{ data: prof }, { data: mem, error }] = await Promise.all([
       c.from('profiles').select('*').eq('id', uid).maybeSingle(),
-      c.from('organization_members').select('role, created_at, organizations(*)').eq('user_id', uid).order('created_at').limit(1)
+      c.from('organization_members').select('org_id, role, created_at').eq('user_id', uid).order('created_at').limit(1)
     ]);
-    if (error) throw error;
+    if (error) throw Object.assign(new Error(error.message), { step: 'Членство в компанії' });
     const name = (prof && prof.full_name) || session.user.email.split('@')[0];
     ACC = { client: c, uid, email: session.user.email, profile: prof || {}, name, firstName: name.split(' ')[0], team: [], invites: [], docs: [] };
-    if (!mem || !mem.length || !mem[0].organizations) return false;
-    ACC.org = mem[0].organizations; ACC.role = mem[0].role;
+    if (!mem || !mem.length) return false;
+    const { data: org, error: orgErr } = await c.from('organizations').select('*').eq('id', mem[0].org_id).maybeSingle();
+    if (orgErr) throw Object.assign(new Error(orgErr.message), { step: 'Дані компанії' });
+    if (!org) return false;
+    ACC.org = org; ACC.role = mem[0].role;
     const [st, team, inv, docs] = await Promise.all([
       c.from('org_state').select('data').eq('org_id', ACC.org.id).maybeSingle(),
       c.from('organization_members').select('role, user_id, profiles(full_name, job_title)').eq('org_id', ACC.org.id),
@@ -700,14 +709,25 @@
     const qs = new URLSearchParams(location.search);
     const { data: { session } } = await AUTH.client.auth.getSession();
     if (!session) { location.replace(AUTH.siteRoot() + 'auth/?mode=login&reason=session' + (location.hash.length > 2 ? '&next=' + encodeURIComponent(location.hash) : '')); return; }
+    const dataReady = loadData().catch(e => { DATA.error = 'Не вдалося завантажити тендери: ' + (e && e.message || 'помилка мережі'); }).finally(() => { DATA.loading = false; });
     let ok;
-    try { [ok] = await Promise.all([loadAccount(session), loadData()]); }
-    catch { fatal('Не вдалося завантажити дані компанії', 'Перевірте з’єднання і оновіть сторінку.<br><br><button class="btn btn--primary" type="button" onclick="location.reload()">Оновити</button>'); return; }
+    try { ok = await loadAccount(session); }
+    catch (e) {
+      fatal('Не вдалося завантажити дані компанії', `${e && e.step ? esc(e.step) + ': ' : ''}<code>${esc((e && e.message) || 'невідома помилка')}</code><br><br>Перевірте з’єднання і оновіть сторінку.<br><br><button class="btn btn--primary" type="button" onclick="location.reload()">Оновити</button>`);
+      return;
+    }
     AUTH.client.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') location.replace(AUTH.siteRoot() + 'auth/?mode=login'); });
     if (!ok) { document.body.classList.remove('booting'); createOrgModal(); return; }
+    // робочий простір відкривається одразу; тендери догружаються у фоні
     rescore(); paintAccount(); paintBell(); document.body.classList.remove('booting'); render();
     if (qs.has('welcome')) toast(`Вітаємо в Tendera, ${esc(ACC.firstName)}! Компанію «${esc(ACC.org.name)}» створено.`);
     if (qs.toString()) history.replaceState(null, '', location.pathname + location.hash);
+    await dataReady;
+    rescore(); paintAccount(); $$('.dot', $('#bellBtn')).forEach(d => d.remove()); paintBell();
+    const route = location.hash.replace(/^#\/?/, '').split(/[/?]/)[0];
+    // не перемальовуємо форми, у яких людина зараз пише
+    if (!['bid', 'settings', 'library'].includes(route)) { const y = scrollY; render(); scrollTo({ top: y }); }
   }
+  window.addEventListener('unhandledrejection', e => { if (!ACC || !ACC.org) fatal('Не вдалося відкрити робочий простір', `<code>${esc((e.reason && e.reason.message) || String(e.reason))}</code><br><br><button class="btn btn--primary" type="button" onclick="location.reload()">Оновити</button>`); });
   boot();
 })();
