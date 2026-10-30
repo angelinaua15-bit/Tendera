@@ -161,6 +161,7 @@ begin
   insert into public.organizations (name, country, reg_code)
   values (left(btrim(p_name), 200), upper(left(coalesce(p_country, 'UA'), 2)), left(nullif(btrim(coalesce(p_reg_code, '')), ''), 32))
   returning id into v_org;
+  insert into public.profiles (id) values ((select auth.uid())) on conflict (id) do nothing;
   insert into public.organization_members (org_id, user_id, role) values (v_org, (select auth.uid()), 'owner');
   insert into public.org_state (org_id) values (v_org);
   return v_org;
@@ -265,3 +266,34 @@ drop policy if exists "org members delete files" on storage.objects;
 create policy "org members read files"   on storage.objects for select to authenticated using (bucket_id = 'org-documents' and (select public.is_org_member(public.org_from_path(name))));
 create policy "org members upload files" on storage.objects for insert to authenticated with check (bucket_id = 'org-documents' and (select public.is_org_member(public.org_from_path(name))));
 create policy "org members delete files" on storage.objects for delete to authenticated using (bucket_id = 'org-documents' and (select public.is_org_member(public.org_from_path(name))));
+
+-- ═════════════════════════ Акаунти, створені до запуску цієї схеми ═════════════════════════
+-- Якщо хтось зареєструвався раніше, ніж з'явилися таблиці, — додаємо профіль і компанію з даних реєстрації.
+do $$
+declare u record; meta jsonb; v_org uuid; v_name text;
+begin
+  for u in select id, email, raw_user_meta_data from auth.users loop
+    meta := coalesce(u.raw_user_meta_data, '{}'::jsonb);
+    insert into public.profiles (id, full_name, job_title, phone, locale)
+    values (u.id, left(nullif(btrim(meta->>'full_name'), ''), 120), left(nullif(btrim(meta->>'job_title'), ''), 120),
+            left(nullif(btrim(meta->>'phone'), ''), 32), coalesce(nullif(meta->>'locale', ''), 'uk'))
+    on conflict (id) do nothing;
+    v_name := left(nullif(btrim(meta->>'company_name'), ''), 200);
+    if v_name is not null and char_length(v_name) >= 2 and not exists (select 1 from public.organization_members m where m.user_id = u.id) then
+      insert into public.organizations (name, country, reg_code, size, industries, regions, website)
+      values (v_name,
+              upper(left(coalesce(nullif(meta->>'country', ''), 'UA'), 2)),
+              left(nullif(regexp_replace(coalesce(meta->>'reg_code', ''), '\s', '', 'g'), ''), 32),
+              case when meta->>'company_size' in ('1-10','11-50','51-250','251-1000','1000+') then meta->>'company_size' end,
+              coalesce(array(select left(x, 80) from jsonb_array_elements_text(coalesce(meta->'industries', '[]'::jsonb)) as t(x) limit 20), '{}'),
+              coalesce(array(select left(x, 40) from jsonb_array_elements_text(coalesce(meta->'regions', '[]'::jsonb)) as t(x) limit 20), '{}'),
+              left(nullif(btrim(meta->>'website'), ''), 200))
+      returning id into v_org;
+      insert into public.organization_members (org_id, user_id, role) values (v_org, u.id, 'owner');
+      insert into public.org_state (org_id) values (v_org) on conflict do nothing;
+    end if;
+  end loop;
+end $$;
+
+-- Оновити кеш API, щоб нові таблиці стали видимі одразу
+notify pgrst, 'reload schema';

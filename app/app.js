@@ -713,6 +713,7 @@
     let ok;
     try { ok = await loadAccount(session); }
     catch (e) {
+      if (/schema cache|does not exist/i.test((e && e.message) || '')) { fatal('База даних ще не налаштована', 'Таблиці компаній ще не створені в Supabase. Власник проєкту має один раз запустити <code>supabase/schema.sql</code> у Supabase → SQL Editor, після чого оновіть сторінку.<br><br><button class="btn btn--primary" type="button" onclick="location.reload()">Оновити</button>'); return; }
       fatal('Не вдалося завантажити дані компанії', `${e && e.step ? esc(e.step) + ': ' : ''}<code>${esc((e && e.message) || 'невідома помилка')}</code><br><br>Перевірте з’єднання і оновіть сторінку.<br><br><button class="btn btn--primary" type="button" onclick="location.reload()">Оновити</button>`);
       return;
     }
