@@ -515,3 +515,17 @@ textarea.editor{resize:vertical;color:var(--text)}
 .side__me .meter__bar[hidden]{display:none}
 .me__note{font-size:12px;color:var(--text-2);line-height:1.4}
 .side__me .btn{justify-self:start}
+
+/* ---------- аватари ---------- */
+.avatar{overflow:hidden;color:#F4F1EA;text-shadow:0 1px 1px rgba(0,0,0,.2)}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.avatar--xl{width:84px;height:84px;font-size:28px;box-shadow:0 0 0 3px var(--surface),0 0 0 4px var(--line)}
+.avatar--pending{opacity:.6;filter:grayscale(.6)}
+#meBtn{width:40px;height:40px;font-size:14px;padding:0;box-shadow:0 0 0 2px var(--bg,transparent),0 0 0 3px var(--line)}
+.side__me .avatar{width:42px;height:42px;font-size:15px}
+.pop__me{grid-template-columns:auto 1fr;align-items:center;gap:10px}
+.pop__me .avatar{width:38px;height:38px}
+.pop__meTxt{display:grid;min-width:0}
+.avedit{display:flex;align-items:center;gap:18px;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--surface);max-width:640px;margin-bottom:16px}
+.avedit b{display:block;font-weight:600}.avedit small{display:block;color:var(--text-3);font-size:13px;margin-top:2px}
+.avedit label.btn{cursor:pointer}

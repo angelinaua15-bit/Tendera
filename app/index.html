@@ -12,7 +12,7 @@
 <meta property="og:image" content="../brand/og.png">
 <link rel="preconnect" href="https://images.unsplash.com">
 <link rel="stylesheet" href="../assets/css/fonts.css">
-<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="app.css?v=20261031b">
 </head>
 <body class="booting">
 <a class="skip" href="#view">Перейти до змісту</a>
@@ -56,7 +56,7 @@
         <button class="avatar" id="meBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="mePop" title="Акаунт"></button>
       </div>
       <div class="pop" id="mePop" hidden>
-        <div class="pop__me"><b id="meName"></b><span id="meMail"></span></div>
+        <div class="pop__me"><span class="avatar" id="meAvatar" aria-hidden="true"></span><span class="pop__meTxt"><b id="meName"></b><span id="meMail"></span></span></div>
         <a href="#/settings?tab=account" class="pop__item"><b>Акаунт</b></a>
         <a href="#/settings?tab=company" class="pop__item"><b>Профіль компанії</b></a>
         <a href="#/settings?tab=team" class="pop__item"><b>Команда</b></a>
@@ -84,10 +84,10 @@
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script src="../assets/vendor/supabase.js"></script>
-<script src="../assets/js/config.js"></script>
-<script src="../assets/js/auth-client.js"></script>
+<script src="../assets/js/config.js?v=20261031b"></script>
+<script src="../assets/js/auth-client.js?v=20261031b"></script>
 <script src="../assets/js/taxonomy.js"></script>
 <script src="../assets/js/europe.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=20261031b"></script>
 </body>
 </html>

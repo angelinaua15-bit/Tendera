@@ -47,6 +47,11 @@
   const dlText = d => d == null ? 'без дедлайну' : d < 0 ? 'прийом завершено' : d === 0 ? 'сьогодні' : d === 1 ? 'завтра' : `через ${d} ${plural(d, 'день', 'дні', 'днів')}`;
   const ago = iso => { if (!iso) return ''; const m = Math.round((Date.now() - Date.parse(iso)) / 6e4); if (m < 60) return `${Math.max(1, m)} хв тому`; const h = Math.round(m / 60); if (h < 24) return `${h} год тому`; const d = Math.round(h / 24); return `${d} ${plural(d, 'день', 'дні', 'днів')} тому`; };
   const initials = n => (n || '?').trim().split(/[\s-]+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?';
+  // аватар: фото, а без фото — ініціали на кольорі, що залежить від імені
+  const AV_COLORS = [['#2B5B6B', '#1F6F65'], ['#6B4A2B', '#A8743A'], ['#3B3F7A', '#5B63B8'], ['#6A2F4C', '#A84D79'], ['#2F5A3A', '#4E8F5E'], ['#5A3B6B', '#8A5BA8'], ['#6B2F2F', '#B0544A'], ['#2F4F6B', '#3F7FB0']];
+  const avColor = n => { let h = 0; for (const ch of String(n || '?')) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return AV_COLORS[h % AV_COLORS.length]; };
+  const avatar = (name, url, cls = '') => { const [a, b] = avColor(name); return `<span class="avatar ${cls}" style="background:linear-gradient(135deg,${a},${b})" aria-hidden="true">${url ? `<img src="${esc(url)}" alt="" loading="lazy">` : esc(initials(name))}</span>`; };
+  function paintAvatar(el, name, url) { if (!el) return; const [a, b] = avColor(name); el.style.background = `linear-gradient(135deg,${a},${b})`; el.innerHTML = url ? `<img src="${esc(url)}" alt="">` : esc(initials(name)); }
   const ICON = {
     ext: '<svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
     down: '<svg viewBox="0 0 24 24"><path d="M12 4v12M6 10l6 6 6-6M4 20h16"/></svg>', copy: '<svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>',
@@ -485,7 +490,7 @@
         </dl><a class="btn btn--ghost btn--sm" href="${esc(t.url)}" target="_blank" rel="noopener" style="margin-top:14px;width:100%">${ICON.ext}Оголошення на ${srcLabel(t)}</a></section>
         <section class="card"><div class="card__head"><h2>Документи компанії</h2><a href="#/library">Бібліотека</a></div>
           ${ACC.docs.length ? ACC.docs.slice(0, 8).map(l => { const d = docDays(l); return `<div class="docline"><span class="libc__ic libc__ic--sm">${esc(extOf(l.name))}</span><div><div class="docline__name">${esc(l.name)}</div><small style="color:${d != null && d < 15 ? 'var(--bad)' : 'var(--text-3)'}">${d == null ? esc(l.doc_type) : d < 0 ? 'Строк дії минув' : `Дійсний ще ${d} дн.`}</small></div></div>`; }).join('') : '<p class="muted" style="margin:0">Завантажте статутні документи, довідки й сертифікати — вони знадобляться для кожної заявки.</p>'}</section>
-        <section class="card"><h2 style="margin-bottom:12px">Команда</h2>${ACC.team.map(m => `<div class="docline"><span class="avatar avatar--sm">${esc(initials(m.name))}</span><div>${esc(m.name)}<small style="display:block;color:var(--text-3)">${esc(m.role)}</small></div></div>`).join('')}</section>
+        <section class="card"><h2 style="margin-bottom:12px">Команда</h2>${ACC.team.map(m => `<div class="docline">${avatar(m.name, m.avatar, 'avatar--sm')}<div>${esc(m.name)}<small style="display:block;color:var(--text-3)">${esc(m.role)}</small></div></div>`).join('')}</section>
       </aside></div>`;
   }
   bid.title = () => 'Заявка';
@@ -623,11 +628,13 @@
         <p class="muted" style="margin:0">Тариф: ${esc(PLAN_NAME[o.plan] || o.plan)}. <a href="#/settings?tab=billing">Керувати підпискою</a></p>
         ${admin ? '<div><button class="btn btn--primary" type="submit">Зберегти</button></div>' : ''}</form>`,
       billing: billingTab(admin),
-      team: `<div class="form">${(() => { const u = SUB().usage, used = u.members + u.invites, L = lim().seats; return `<div class="meter"><div class="meter__top"><span>Місця в команді</span><b class="num">${used} / ${L}</b></div><div class="meter__bar"><i style="width:${Math.min(100, L ? used / L * 100 : 100)}%"></i></div>${used >= L ? '<small>Усі місця зайняті. <a href="#/settings?tab=billing">Збільшити ліміт</a></small>' : ''}</div>`; })()}<div class="card" style="padding:8px 16px">${ACC.team.map(m => `<div class="teamline"><span class="avatar avatar--sm">${esc(initials(m.name))}</span><div style="flex:1">${esc(m.name)}<small>${esc(m.role)}</small></div></div>`).join('')}
-        ${ACC.invites.map(e => `<div class="teamline"><span class="avatar avatar--sm">${esc(e[0].toUpperCase())}</span><div style="flex:1">${esc(e)}<small>Очікує реєстрації</small></div>${admin ? `<button class="icon-btn" type="button" data-uninv="${esc(e)}" aria-label="Скасувати запрошення">${ICON.trash}</button>` : ''}</div>`).join('')}</div>
+      team: `<div class="form">${(() => { const u = SUB().usage, used = u.members + u.invites, L = lim().seats; return `<div class="meter"><div class="meter__top"><span>Місця в команді</span><b class="num">${used} / ${L}</b></div><div class="meter__bar"><i style="width:${Math.min(100, L ? used / L * 100 : 100)}%"></i></div>${used >= L ? '<small>Усі місця зайняті. <a href="#/settings?tab=billing">Збільшити ліміт</a></small>' : ''}</div>`; })()}<div class="card" style="padding:8px 16px">${ACC.team.map(m => `<div class="teamline">${avatar(m.name, m.avatar, 'avatar--sm')}<div style="flex:1">${esc(m.name)}<small>${esc(m.role)}</small></div></div>`).join('')}
+        ${ACC.invites.map(e => `<div class="teamline">${avatar(e, null, 'avatar--sm avatar--pending')}<div style="flex:1">${esc(e)}<small>Очікує реєстрації</small></div>${admin ? `<button class="icon-btn" type="button" data-uninv="${esc(e)}" aria-label="Скасувати запрошення">${ICON.trash}</button>` : ''}</div>`).join('')}</div>
         ${admin ? `<form id="invForm" class="inline-form"><label class="sr-only" for="invEmail">Email колеги</label><input class="select" id="invEmail" type="email" required placeholder="email колеги"><button class="btn btn--primary" type="submit"${SUB().usage.members + SUB().usage.invites >= lim().seats ? ' disabled' : ''}>Запросити</button></form>
         <p class="muted" style="margin:0">Колега реєструється з цим email — і автоматично потрапляє у вашу компанію.</p>` : ''}</div>`,
-      account: `<form class="form" id="acForm"><div class="field"><label for="acName">Ім’я та прізвище</label><input id="acName" value="${esc(ACC.profile.full_name || '')}" required minlength="2"></div>
+      account: `<div class="avedit">${avatar(ACC.name, ACC.profile.avatar_url, 'avatar--xl')}<div><b>Фото профілю</b><small>JPG, PNG або WebP. Бачать колеги у вашій компанії.</small>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><label class="btn btn--sm btn--primary" for="avFile">${ACC.profile.avatar_url ? 'Змінити фото' : 'Завантажити фото'}</label><input id="avFile" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only">${ACC.profile.avatar_url ? '<button class="btn btn--sm btn--ghost" type="button" id="avDel">Прибрати</button>' : ''}</div></div></div>
+        <form class="form" id="acForm"><div class="field"><label for="acName">Ім’я та прізвище</label><input id="acName" value="${esc(ACC.profile.full_name || '')}" required minlength="2"></div>
         <div class="field"><label for="acJob">Посада</label><input id="acJob" value="${esc(ACC.profile.job_title || '')}"></div>
         <div class="field"><label for="acMail">Email</label><input id="acMail" value="${esc(ACC.email)}" disabled></div>
         <div class="field"><span style="font-size:13px;color:var(--text-2)">Тема</span><div class="seg" role="group" aria-label="Тема"><button type="button" data-theme-set="dark" aria-pressed="${S.theme === 'dark'}">Темна</button><button type="button" data-theme-set="light" aria-pressed="${S.theme === 'light'}">Світла</button></div></div>
@@ -680,6 +687,30 @@
     });
     $$('[data-theme-set]', view).forEach(b => b.onclick = () => { setTheme(b.dataset.themeSet); render(); });
     $('#signOut2', view)?.addEventListener('click', signOut);
+    $('#avFile', view)?.addEventListener('change', async e => {
+      const f = e.target.files[0]; if (!f) return;
+      if (!/^image\//.test(f.type)) { toast('Оберіть зображення', 'bad'); return; }
+      toast('Завантажуємо фото…');
+      try {
+        const blob = await squareImage(f, 320);
+        const path = `${ACC.uid}/${Date.now().toString(36)}.jpg`;
+        const up = await c.storage.from('avatars').upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+        if (up.error) throw up.error;
+        const url = c.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+        const old = ACC.profile.avatar_url;
+        const { error } = await c.from('profiles').update({ avatar_url: url }).eq('id', ACC.uid);
+        if (error) { await c.storage.from('avatars').remove([path]); throw error; }
+        if (old && old.includes('/avatars/')) c.storage.from('avatars').remove([old.split('/avatars/')[1]]);
+        ACC.profile.avatar_url = url; const me = ACC.team.find(m => m.me); if (me) me.avatar = url;
+        paintAccount(); render(); toast('Фото оновлено');
+      } catch (err) { toast(/bucket|not found|avatar_url/i.test((err && err.message) || '') ? 'Фото профілю ще не ввімкнені в базі — запустіть supabase/avatars.sql' : 'Не вдалося завантажити фото', 'bad'); }
+    });
+    $('#avDel', view)?.addEventListener('click', async () => {
+      const old = ACC.profile.avatar_url; const { error } = await c.from('profiles').update({ avatar_url: null }).eq('id', ACC.uid);
+      if (error) { toast('Не вдалося прибрати фото', 'bad'); return; }
+      if (old && old.includes('/avatars/')) c.storage.from('avatars').remove([old.split('/avatars/')[1]]);
+      ACC.profile.avatar_url = null; const me = ACC.team.find(m => m.me); if (me) me.avatar = null; paintAccount(); render();
+    });
   };
 
   /* ---------- shell: theme, menu, notifications, palette ---------- */
@@ -699,14 +730,14 @@
     const plan = o.plan || 'trial';
     $('#orgPlan').textContent = expired() ? 'Підписка неактивна' : plan === 'trial' ? `Пробний період · ${days} ${plural(days, 'день', 'дні', 'днів')}` : `Тариф ${PLAN_NAME[plan] || plan}`;
     paintSideMe();
-    $('#meName').textContent = ACC.name; $('#meMail').textContent = ACC.email; $('#meBtn').textContent = initials(ACC.name); $('#meBtn').title = ACC.name;
+    $('#meName').textContent = ACC.name; $('#meMail').textContent = ACC.email; paintAvatar($('#meBtn'), ACC.name, ACC.profile.avatar_url); paintAvatar($('#meAvatar'), ACC.name, ACC.profile.avatar_url); $('#meBtn').title = ACC.name;
     const M = DATA.meta; $('#freshPill').textContent = DATA.loading ? 'Завантаження тендерів…' : M && M.generatedAt ? `Оновлено ${ago(M.generatedAt)}` : 'Дані оновлюються';
     $('#freshPill').title = M && M.counts ? `Відкритих тендерів: Prozorro ${nf.format(M.counts.ua)}, TED ${nf.format(M.counts.eu)}` : '';
     const n = matched().filter(t => t.pub && Date.now() - Date.parse(t.pub) < 864e5).length; $('#newCount').textContent = n; $('#newCount').hidden = !n;
   }
   function paintSideMe() {
     const o = ACC.org, plan = o.plan || 'trial', exp = expired();
-    $('#sideAvatar').textContent = initials(ACC.name); $('#sideName').textContent = ACC.name;
+    paintAvatar($('#sideAvatar'), ACC.name, ACC.profile.avatar_url); $('#sideName').textContent = ACC.name;
     $('#sideRole').textContent = [ACC.profile.job_title || ROLE_UA[ACC.role], ACC.email].filter(Boolean).join(' · ');
     $('#sidePlan').textContent = exp ? (plan === 'trial' ? 'Пробний період' : PLAN_NAME[plan] || plan) : PLAN_NAME[plan] || plan;
     const st = $('#sideStatus'), bar = $('#sideBar'), note = $('#sideNote'), cta = $('#sideCta');
@@ -756,6 +787,16 @@
     if (e.key === 'Enter') { e.preventDefault(); runPal(sel); }
   });
 
+  /* квадратне фото потрібного розміру: менше важить і однаково виглядає скрізь */
+  function squareImage(file, size) {
+    return new Promise((resolve, reject) => {
+      const img = new Image(); const url = URL.createObjectURL(file);
+      img.onload = () => { const s = Math.min(img.width, img.height); const cv = document.createElement('canvas'); cv.width = cv.height = size;
+        cv.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size); URL.revokeObjectURL(url);
+        cv.toBlob(b => (b ? resolve(b) : reject(new Error('image'))), 'image/jpeg', 0.88); };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image')); }; img.src = url;
+    });
+  }
   /* ---------- boot ---------- */
   function rescore() {
     // тариф Start — один ринок: Україна (Prozorro) або ЄС (TED), за профілем пошуку
@@ -791,13 +832,13 @@
     ACC.org = org; ACC.role = mem[0].role;
     const [st, team, inv, docs] = await Promise.all([
       c.from('org_state').select('data').eq('org_id', ACC.org.id).maybeSingle(),
-      c.from('organization_members').select('role, user_id, profiles(full_name, job_title)').eq('org_id', ACC.org.id),
+      c.from('organization_members').select('role, user_id, profiles(*)').eq('org_id', ACC.org.id),
       ACC.role === 'member' ? Promise.resolve({ data: [] }) : c.from('invitations').select('email').eq('org_id', ACC.org.id),
       c.from('documents').select('*').eq('org_id', ACC.org.id).order('created_at', { ascending: false })
     ]);
     const data = (st.data && st.data.data) || {};
     SYNC.forEach(k => { if (data[k] && typeof data[k] === 'object' && !Array.isArray(data[k])) S[k] = data[k]; });
-    ACC.team = (team.data || []).map(m => ({ name: (m.profiles && m.profiles.full_name) || (m.user_id === uid ? name : 'Учасник'), role: (m.profiles && m.profiles.job_title) || ROLE_UA[m.role] }));
+    ACC.team = (team.data || []).map(m => ({ name: (m.profiles && m.profiles.full_name) || (m.user_id === uid ? name : 'Учасник'), role: (m.profiles && m.profiles.job_title) || ROLE_UA[m.role], avatar: (m.profiles && m.profiles.avatar_url) || (m.user_id === uid ? (prof && prof.avatar_url) : null) || null, me: m.user_id === uid }));
     ACC.invites = (inv.data || []).map(i => i.email); ACC.docs = docs.error ? [] : (docs.data || []);
     const sub = await c.rpc('org_subscription', { p_org: ACC.org.id });
     ACC.sub = !sub.error && sub.data ? { ...sub.data, limits: { ...(LIMITS[sub.data.effective] || LIMITS.trial), ...sub.data.limits } } : localSub(ACC.org);
