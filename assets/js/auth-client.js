@@ -33,6 +33,8 @@
   ];
   function humanError(e) {
     const msg = (e && (e.message || e.error_description || String(e))) || '';
+    if (/failed to fetch|network|load failed/i.test(msg) && navigator.onLine !== false)
+      return 'Сервер входу зараз недоступний. Ми вже працюємо над цим — спробуйте трохи пізніше.';
     const hit = ERRORS.find(([re]) => re.test(msg));
     return hit ? hit[1] : 'Не вдалося виконати дію. Спробуйте ще раз або напишіть нам.';
   }
