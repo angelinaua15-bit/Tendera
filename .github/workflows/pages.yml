@@ -30,6 +30,13 @@ jobs:
         continue-on-error: true
         env:
           SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+      - name: Тримати базу Supabase активною (щоб безкоштовний проєкт не ставився на паузу)
+        continue-on-error: true
+        run: |
+          URL=$(grep -oP "supabaseUrl:\s*'\K[^']+" assets/js/config.js)
+          KEY=$(grep -oP "supabaseKey:\s*'\K[^']+" assets/js/config.js)
+          curl -sS -m 20 -o /dev/null -w "auth health: %{http_code}\n" "$URL/auth/v1/health" -H "apikey: $KEY" || true
+          curl -sS -m 20 -o /dev/null -w "db ping: %{http_code}\n" "$URL/rest/v1/organizations?select=id&limit=1" -H "apikey: $KEY" || true
       - name: Підсумок
         run: |
           ls -la data || true
