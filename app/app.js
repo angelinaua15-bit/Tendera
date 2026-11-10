@@ -858,7 +858,8 @@
   async function boot() {
     if (!AUTH || !AUTH.configured) { fatal('Сервіс налаштовується', 'Вхід тимчасово недоступний. Спробуйте трохи пізніше.'); return; }
     const qs = new URLSearchParams(location.search);
-    const { data: { session } } = await AUTH.client.auth.getSession();
+    const { session, ok: sessOk } = await AUTH.currentSession(8000);
+    if (!session && !sessOk) { fatal('Немає з’єднання із сервером', 'Не вдалося перевірити вхід. Перевірте інтернет і оновіть сторінку.<br><br><button class="btn btn--primary" type="button" onclick="location.reload()">Оновити</button>'); return; }
     if (!session) { location.replace(AUTH.siteRoot() + 'auth/?mode=login&reason=session' + (location.hash.length > 2 ? '&next=' + encodeURIComponent(location.hash) : '')); return; }
     const dataReady = loadData().catch(e => { DATA.error = 'Не вдалося завантажити тендери: ' + (e && e.message || 'помилка мережі'); }).finally(() => { DATA.loading = false; });
     let ok;

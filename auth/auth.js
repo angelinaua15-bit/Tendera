@@ -227,7 +227,8 @@
   /* ---------- НОВИЙ ПАРОЛЬ ---------- */
   async function update() {
     topSwitch('update'); document.title = 'Новий пароль — Tendera';
-    const { data } = configured ? await client.auth.getSession() : { data: {} };
+    const { session } = await window.tenderaAuth.currentSession(8000);
+    const data = { session };
     if (!data.session) { draw(`<h1>Посилання недійсне</h1><p class="sub">Можливо, воно застаріло або вже використане.</p><a class="btn btn--primary" href="?mode=reset" style="width:100%">Запросити нове посилання</a>`); return; }
     draw(`<h1>Новий пароль</h1><p class="sub">Для акаунта ${esc(data.session.user.email)}.</p>
     <form id="f" novalidate><div class="f"><label for="password">Новий пароль</label><div class="pw"><input id="password" type="password" autocomplete="new-password" minlength="8" required><button type="button" data-toggle="password" aria-label="Показати пароль">Показати</button></div><div class="meter" id="meter" data-s="0" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>
@@ -251,11 +252,14 @@
 
   async function route() {
     const mode = new URLSearchParams(location.search).get('mode') || 'signup';
+    const view = { signup, login, reset, update }[mode] || signup;
+    // Форма з'являється одразу; перевірка сесії йде у фоні
+    try { await view(); }
+    catch (e) { console.error(e); card.innerHTML = '<h1>Щось пішло не так</h1><p class="sub">Оновіть сторінку. Якщо не допоможе — напишіть нам.</p><button class="btn btn--primary" type="button" style="width:100%" onclick="location.reload()">Оновити сторінку</button>'; }
     if (configured && (mode === 'signup' || mode === 'login')) {
-      const { data } = await client.auth.getSession();
-      if (data.session) { location.replace(APP); return; }
+      const { session } = await window.tenderaAuth.currentSession();
+      if (session) location.replace(APP);
     }
-    ({ signup, login, reset, update }[mode] || signup)();
   }
   if (configured) client.auth.onAuthStateChange(ev => { if (ev === 'PASSWORD_RECOVERY' && new URLSearchParams(location.search).get('mode') !== 'update') go('update'); });
   route();

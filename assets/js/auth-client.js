@@ -5,7 +5,11 @@
   const configured = !!(cfg.supabaseUrl && cfg.supabaseKey && window.supabase);
   const client = configured
     ? window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, {
-        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' }
+        auth: {
+          persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce',
+          // Без navigator.locks: інакше getSession() може зависнути, якщо інша вкладка тримає блокування
+          lock: (name, timeout, fn) => fn()
+        }
       })
     : null;
 
@@ -33,5 +37,19 @@
     return hit ? hit[1] : 'Не вдалося виконати дію. Спробуйте ще раз або напишіть нам.';
   }
 
-  window.tenderaAuth = { client, configured, siteRoot, humanError };
+  // Сесія з тайм-аутом: сторінка ніколи не чекає вічно
+  async function currentSession(ms = 5000) {
+    if (!client) return { session: null, ok: false };
+    let timer;
+    try {
+      const res = await Promise.race([
+        client.auth.getSession(),
+        new Promise((_, rej) => { timer = setTimeout(() => rej(new Error('timeout')), ms); })
+      ]);
+      return { session: (res && res.data && res.data.session) || null, ok: !res.error };
+    } catch (e) { return { session: null, ok: false, error: e }; }
+    finally { clearTimeout(timer); }
+  }
+
+  window.tenderaAuth = { client, configured, siteRoot, humanError, currentSession };
 })();
